@@ -1,24 +1,21 @@
 import * as React from "react";
 
-import { SearchForm } from "@/components/search-form";
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Calendar } from "@/components/ui/calendar";
+import { SearchForm } from "@/components/search-form";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
-      <SidebarHeader>
-        <SearchForm />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu className="mt-8 gap-8 max-w-[12rem] w-full">
+      <SidebarContent className="items-center">
+        <SidebarMenu className="mt-8 gap-8 w-full max-w-[12rem]">
           <SidebarMenuItem>
             <SidebarMenuButton
               className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -40,6 +37,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div className="mt-6 w-full max-w-[12rem]">
+          <SearchForm />
+        </div>
+        <div className="mt-auto mb-6 w-full pb-2 self-stretch">
+          <Calendar className="w-full" />
+        </div>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
