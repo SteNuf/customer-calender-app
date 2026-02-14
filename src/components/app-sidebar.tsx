@@ -17,6 +17,7 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   showBackButton?: boolean;
   onBackClick?: () => void;
   showSearch?: boolean;
+  onNewCustomerClick?: () => void;
 };
 
 export function AppSidebar({
@@ -25,6 +26,7 @@ export function AppSidebar({
   showBackButton = false,
   onBackClick,
   showSearch = true,
+  onNewCustomerClick,
   ...props
 }: AppSidebarProps) {
   return (
@@ -60,7 +62,7 @@ export function AppSidebar({
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
                 onClick={() => {
-                  console.log("Ich bin ein neuer Kunde");
+                  onNewCustomerClick?.();
                 }}
               >
                 Neuer Kunde anlegen

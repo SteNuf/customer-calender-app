@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NewDate } from "@/components/newDate";
+import { NewCustomer } from "@/components/newCustomer";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -176,6 +177,9 @@ function AppLayout() {
         onNewDateClick={() => {
           navigate("/new-date");
         }}
+        onNewCustomerClick={() => {
+          navigate("/new-customer");
+        }}
       />
       <SidebarInset>
         <HomePage />
@@ -190,6 +194,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<AppLayout />} />
         <Route path="/new-date" element={<NewDate />} />
+        <Route path="/new-customer" element={<NewCustomer />} />
       </Routes>
       <Toaster />
     </BrowserRouter>
