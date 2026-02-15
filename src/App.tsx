@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NewDate } from "@/components/newDate";
 import { NewCustomer } from "@/components/newCustomer";
+import { SearchCustomer } from "@/components/searchCustomer";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ const STORAGE_KEY = "appointments";
 
 function HomePage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const navigate = useNavigate();
 
   const loadAppointments = () => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -89,17 +91,29 @@ function HomePage() {
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-center gap-2">
-                  <Badge>{item.startTime || "--:--"}</Badge>
-                  <Badge variant="secondary">{item.endTime || "--:--"}</Badge>
-                  <span className="text-sm text-muted-foreground">
+                  <Badge className="inline-flex w-16 justify-center">
+                    {item.startTime || "--:--"}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="inline-flex w-16 justify-center"
+                  >
+                    {item.endTime || "--:--"}
+                  </Badge>
+                  <span className="inline-block w-40 text-left text-sm text-muted-foreground">
                     {item.title || "Termin"}
                   </span>
-                  <Badge variant="outline">{item.status || "offen"}</Badge>
+                  <Badge
+                    variant="outline"
+                    className="inline-flex w-28 justify-center"
+                  >
+                    {item.status || "offen"}
+                  </Badge>
                   <button
                     type="button"
                     className="ml-3 rounded p-1 transition-colors hover:bg-muted"
                     onClick={() => {
-                      console.log("Du klickst auf den Bearbeiten Modus.");
+                      navigate("/new-date", { state: { appointment: item } });
                     }}
                     aria-label="Bearbeiten"
                   >
@@ -195,6 +209,7 @@ export default function App() {
         <Route path="/" element={<AppLayout />} />
         <Route path="/new-date" element={<NewDate />} />
         <Route path="/new-customer" element={<NewCustomer />} />
+        <Route path="/search-customer" element={<SearchCustomer />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

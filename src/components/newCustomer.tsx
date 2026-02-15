@@ -1,6 +1,6 @@
-﻿import { useCallback, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
@@ -34,6 +34,7 @@ export function NewCustomer() {
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+  const [prefilled, setPrefilled] = useState(false);
   const [errors, setErrors] = useState({
     lastName: "",
     firstName: "",
@@ -50,12 +51,16 @@ export function NewCustomer() {
     setSidebarHoverOpen(false);
   }, []);
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingCustomer = (
+    location.state as { customer?: Customer } | null
+  )?.customer;
 
   const validateRequired = () => {
     const nextErrors = {
       lastName: lastName.trim().length === 0 ? "Bitte Name eingeben." : "",
       firstName: firstName.trim().length === 0 ? "Bitte Vorname eingeben." : "",
-      street: street.trim().length === 0 ? "Bitte Straße eingeben." : "",
+      street: street.trim().length === 0 ? "Bitte Stra�e eingeben." : "",
       zip: zip.trim().length === 0 ? "Bitte Postleitzahl eingeben." : "",
       city: city.trim().length === 0 ? "Bitte Stadt eingeben." : "",
       phone: phone.trim().length === 0 ? "Bitte Telefon eingeben." : "",
@@ -88,6 +93,34 @@ export function NewCustomer() {
     });
   };
 
+  useEffect(() => {
+    const customer = (location.state as { customer?: Customer } | null)
+      ?.customer;
+    if (!customer || prefilled) {
+      return;
+    }
+    setTitle(customer.title ?? "");
+    setLastName(customer.lastName ?? "");
+    setFirstName(customer.firstName ?? "");
+    setBirthDate(customer.birthDate ?? "");
+    setStreet(customer.street ?? "");
+    setZip(customer.zip ?? "");
+    setCity(customer.city ?? "");
+    setPhone(customer.phone ?? "");
+    setMobile(customer.mobile ?? "");
+    setEmail(customer.email ?? "");
+    setWebsite(customer.website ?? "");
+    setErrors({
+      lastName: "",
+      firstName: "",
+      street: "",
+      zip: "",
+      city: "",
+      phone: "",
+      email: "",
+    });
+    setPrefilled(true);
+  }, [location.state, prefilled]);
   const saveCustomer = () => {
     const customer: Customer = {
       title: title.trim(),
@@ -101,14 +134,18 @@ export function NewCustomer() {
       mobile: mobile.trim(),
       email: email.trim(),
       website: website.trim(),
-      createdAt: new Date().toISOString(),
+      createdAt: editingCustomer?.createdAt ?? new Date().toISOString(),
     };
 
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const list = raw ? (JSON.parse(raw) as Customer[]) : [];
-      list.push(customer);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      const next = editingCustomer
+        ? list.map((item) =>
+            item.createdAt === editingCustomer.createdAt ? customer : item
+          )
+        : [...list, customer];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
       localStorage.setItem(STORAGE_KEY, JSON.stringify([customer]));
     }
@@ -192,7 +229,7 @@ export function NewCustomer() {
                 />
               </div>
               <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Straße: *</span>
+                <span className="w-40">Stra�e: *</span>
                 <input
                   type="text"
                   value={street}
@@ -284,7 +321,7 @@ export function NewCustomer() {
                 />
               </div>
               <p className="mt-3 text-sm text-muted-foreground">
-                * Bitte ausfüllen
+                * Bitte ausf�llen
               </p>
               <div className="mt-24 flex w-full items-center justify-between gap-6">
                 <button
@@ -334,3 +371,4 @@ export function NewCustomer() {
     </SidebarProvider>
   );
 }
+

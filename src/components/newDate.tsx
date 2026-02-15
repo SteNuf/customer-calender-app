@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,7 @@ export function NewDate() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [status, setStatus] = useState("Auswählen");
+  const [prefilled, setPrefilled] = useState(false);
   const [errors, setErrors] = useState({
     title: "",
     startDate: "",
@@ -47,6 +48,10 @@ export function NewDate() {
     setSidebarHoverOpen(false);
   }, []);
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingAppointment = (
+    location.state as { appointment?: Appointment } | null
+  )?.appointment;
 
   const validateRequired = () => {
     const nextErrors = {
@@ -139,6 +144,29 @@ export function NewDate() {
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
+
+  useEffect(() => {
+    const appointment = (location.state as { appointment?: Appointment } | null)
+      ?.appointment;
+    if (!appointment || prefilled) {
+      return;
+    }
+    setTitle(appointment.title ?? "");
+    setStartDate(appointment.startDate ?? "");
+    setEndDate(appointment.endDate ?? "");
+    setStartTime(appointment.startTime ?? "");
+    setEndTime(appointment.endTime ?? "");
+    setStatus(appointment.status ?? "Auswählen");
+    setErrors({
+      title: "",
+      startDate: "",
+      endDate: "",
+      startTime: "",
+      endTime: "",
+      status: "",
+    });
+    setPrefilled(true);
+  }, [location.state, prefilled]);
 
   return (
     <SidebarProvider
@@ -279,28 +307,30 @@ export function NewDate() {
                       if (!validateRequired()) {
                         return;
                       }
-                      if (isEndBeforeStart()) {
-                        toast.error(
-                          "Endzeit darf nicht vor der Startzeit liegen.",
-                          { duration: 6000 }
-                        );
-                        return;
-                      }
-                      if (hasOverlap()) {
-                        toast.error(
-                          "In diesem Zeitraum liegt schon ein Termin.",
-                          { duration: 6000 }
-                        );
-                        return;
+                      if (!editingAppointment) {
+                        if (isEndBeforeStart()) {
+                          toast.error(
+                            "Endzeit darf nicht vor der Startzeit liegen.",
+                            { duration: 6000 }
+                          );
+                          return;
+                        }
+                        if (hasOverlap()) {
+                          toast.error(
+                            "In diesem Zeitraum liegt schon ein Termin.",
+                            { duration: 6000 }
+                          );
+                          return;
+                        }
                       }
                       saveAppointment();
                       resetForm();
-                      console.log(
-                        "Der Termin ist angelegt. Sie werden zum Kunden anlegen weitergeleitet."
-                      );
                       toast(
-                        "Der Termin ist im Kalender gespeichert und Sie werden zum Kunden anlegen weitergeleitet."
+                        "Der Termin ist im Kalender gespeichert. Sie werden zum Kunden anlegen weitergeleitet."
                       );
+                      setTimeout(() => {
+                        navigate("/new-customer");
+                      }, 1200);
                     }}
                   >
                     Speichern + Neuer Kunde anlegen
@@ -311,19 +341,21 @@ export function NewDate() {
                       if (!validateRequired()) {
                         return;
                       }
-                      if (isEndBeforeStart()) {
-                        toast.error(
-                          "Endzeit darf nicht vor der Startzeit liegen.",
-                          { duration: 6000 }
-                        );
-                        return;
-                      }
-                      if (hasOverlap()) {
-                        toast.error(
-                          "In diesem Zeitraum liegt schon ein Termin.",
-                          { duration: 6000 }
-                        );
-                        return;
+                      if (!editingAppointment) {
+                        if (isEndBeforeStart()) {
+                          toast.error(
+                            "Endzeit darf nicht vor der Startzeit liegen.",
+                            { duration: 6000 }
+                          );
+                          return;
+                        }
+                        if (hasOverlap()) {
+                          toast.error(
+                            "In diesem Zeitraum liegt schon ein Termin.",
+                            { duration: 6000 }
+                          );
+                          return;
+                        }
                       }
                       saveAppointment();
                       resetForm();
