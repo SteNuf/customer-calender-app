@@ -52,15 +52,14 @@ export function NewCustomer() {
   }, []);
   const navigate = useNavigate();
   const location = useLocation();
-  const editingCustomer = (
-    location.state as { customer?: Customer } | null
-  )?.customer;
+  const editingCustomer = (location.state as { customer?: Customer } | null)
+    ?.customer;
 
   const validateRequired = () => {
     const nextErrors = {
       lastName: lastName.trim().length === 0 ? "Bitte Name eingeben." : "",
       firstName: firstName.trim().length === 0 ? "Bitte Vorname eingeben." : "",
-      street: street.trim().length === 0 ? "Bitte Stra�e eingeben." : "",
+      street: street.trim().length === 0 ? "Bitte Straße eingeben." : "",
       zip: zip.trim().length === 0 ? "Bitte Postleitzahl eingeben." : "",
       city: city.trim().length === 0 ? "Bitte Stadt eingeben." : "",
       phone: phone.trim().length === 0 ? "Bitte Telefon eingeben." : "",
@@ -142,7 +141,7 @@ export function NewCustomer() {
       const list = raw ? (JSON.parse(raw) as Customer[]) : [];
       const next = editingCustomer
         ? list.map((item) =>
-            item.createdAt === editingCustomer.createdAt ? customer : item
+            item.createdAt === editingCustomer.createdAt ? customer : item,
           )
         : [...list, customer];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -229,7 +228,7 @@ export function NewCustomer() {
                 />
               </div>
               <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Stra�e: *</span>
+                <span className="w-40">Straße: *</span>
                 <input
                   type="text"
                   value={street}
@@ -321,7 +320,7 @@ export function NewCustomer() {
                 />
               </div>
               <p className="mt-3 text-sm text-muted-foreground">
-                * Bitte ausf�llen
+                * Bitte ausfüllen
               </p>
               <div className="mt-24 flex w-full items-center justify-between gap-6">
                 <button
@@ -371,4 +370,3 @@ export function NewCustomer() {
     </SidebarProvider>
   );
 }
-
