@@ -87,7 +87,7 @@ function HomePage() {
           {appointments.map((item, index) => (
             <Card
               key={`${item.createdAt}-${index}`}
-              className="w-full max-w-[700px] cursor-pointer transition-shadow hover:shadow-md"
+              className="w-full max-w-700px cursor-pointer transition-shadow hover:shadow-md"
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-center gap-2">
