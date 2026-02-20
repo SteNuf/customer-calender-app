@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type Appointment = {
+  id: number;
   title: string;
   startDate: string;
   endDate: string;
@@ -22,7 +24,12 @@ type Appointment = {
   createdAt: string;
 };
 
-const STORAGE_KEY = "appointments";
+const toTimestampString = (date: string, time: string) => {
+  if (!date || !time) {
+    return "";
+  }
+  return `${date}T${time}:00`;
+};
 
 export function NewDate() {
   const [sidebarHoverOpen, setSidebarHoverOpen] = useState(true);
@@ -52,6 +59,11 @@ export function NewDate() {
   const editingAppointment = (
     location.state as { appointment?: Appointment } | null
   )?.appointment;
+  const appointmentIdFromState = (
+    location.state as { appointmentId?: number } | null
+  )?.appointmentId;
+  const editingAppointmentId =
+    editingAppointment?.id ?? appointmentIdFromState ?? null;
 
   const validateRequired = () => {
     const nextErrors = {
@@ -83,27 +95,38 @@ export function NewDate() {
     });
   };
 
-  const saveAppointment = () => {
-    const appointment: Appointment = {
-      title: title.trim(),
-      startDate,
-      endDate,
-      startTime,
-      endTime,
+  const saveAppointment = async () => {
+    const payload = {
+      grund: title.trim(),
+      startzeitpkt: toTimestampString(startDate, startTime),
+      endzeitpkt: toTimestampString(endDate, endTime),
       status,
-      createdAt: new Date().toISOString(),
     };
 
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const list = raw ? (JSON.parse(raw) as Appointment[]) : [];
-      list.push(appointment);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    } catch {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([appointment]));
+    if (editingAppointmentId) {
+      const { error } = await supabase
+        .from("termine")
+        .update(payload)
+        .eq("id", editingAppointmentId);
+      if (error) {
+        toast.error(`Speichern fehlgeschlagen: ${error.message}`);
+        return null;
+      }
+      return editingAppointmentId;
     }
 
-    window.dispatchEvent(new Event("appointments:updated"));
+    const { data, error } = await supabase
+      .from("termine")
+      .insert(payload)
+      .select("id")
+      .single();
+
+    if (error || !data) {
+      toast.error(`Speichern fehlgeschlagen: ${error?.message ?? "Unbekannt"}`);
+      return null;
+    }
+
+    return data.id as number;
   };
 
   const toDateTime = (date: string, time: string) => {
@@ -118,32 +141,31 @@ export function NewDate() {
       end <= start;
   };
 
-  const hasOverlap = () => {
-    const newStart = toDateTime(startDate, startTime);
-    const newEnd = toDateTime(endDate, endTime);
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const list = raw ? (JSON.parse(raw) as Appointment[]) : [];
-      return list.some((item) => {
-        const existingStart = toDateTime(item.startDate, item.startTime);
-        const existingEnd = toDateTime(item.endDate, item.endTime);
-        return newStart < existingEnd && newEnd > existingStart;
-      });
-    } catch {
+  const hasOverlap = async () => {
+    const newStart = toTimestampString(startDate, startTime);
+    const newEnd = toTimestampString(endDate, endTime);
+    if (!newStart || !newEnd) {
       return false;
     }
-  };
 
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        window.dispatchEvent(new Event("appointments:updated"));
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+    let query = supabase
+      .from("termine")
+      .select("id, startzeitpkt, endzeitpkt")
+      .lt("startzeitpkt", newEnd)
+      .gt("endzeitpkt", newStart);
+
+    if (editingAppointmentId) {
+      query = query.neq("id", editingAppointmentId);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Overlap check failed:", error.message);
+      return false;
+    }
+
+    return Array.isArray(data) && data.length > 0;
+  };
 
   useEffect(() => {
     const appointment = (location.state as { appointment?: Appointment } | null)
@@ -167,6 +189,52 @@ export function NewDate() {
     });
     setPrefilled(true);
   }, [location.state, prefilled]);
+
+  useEffect(() => {
+    if (!editingAppointmentId || prefilled) {
+      return;
+    }
+
+    const loadAppointment = async () => {
+      const { data, error } = await supabase
+        .from("termine")
+        .select("id, grund, startzeitpkt, endzeitpkt, status")
+        .eq("id", editingAppointmentId)
+        .maybeSingle();
+
+      if (error || !data) {
+        toast.error(
+          `Termin konnte nicht geladen werden: ${error?.message ?? "Unbekannt"}`,
+        );
+        return;
+      }
+
+      const start = data.startzeitpkt
+        ? { date: data.startzeitpkt.slice(0, 10), time: data.startzeitpkt.slice(11, 16) }
+        : { date: "", time: "" };
+      const end = data.endzeitpkt
+        ? { date: data.endzeitpkt.slice(0, 10), time: data.endzeitpkt.slice(11, 16) }
+        : { date: "", time: "" };
+
+      setTitle(data.grund ?? "");
+      setStartDate(start.date);
+      setEndDate(end.date);
+      setStartTime(start.time);
+      setEndTime(end.time);
+      setStatus(data.status ?? "Auswählen");
+      setErrors({
+        title: "",
+        startDate: "",
+        endDate: "",
+        startTime: "",
+        endTime: "",
+        status: "",
+      });
+      setPrefilled(true);
+    };
+
+    loadAppointment();
+  }, [editingAppointmentId, prefilled]);
 
   return (
     <SidebarProvider
@@ -307,30 +375,37 @@ export function NewDate() {
                       if (!validateRequired()) {
                         return;
                       }
-                      if (!editingAppointment) {
-                        if (isEndBeforeStart()) {
-                          toast.error(
-                            "Endzeit darf nicht vor der Startzeit liegen.",
-                            { duration: 6000 }
-                          );
+                      (async () => {
+                        if (!editingAppointment) {
+                          if (isEndBeforeStart()) {
+                            toast.error(
+                              "Endzeit darf nicht vor der Startzeit liegen.",
+                              { duration: 6000 }
+                            );
+                            return;
+                          }
+                          if (await hasOverlap()) {
+                            toast.error(
+                              "In diesem Zeitraum liegt schon ein Termin.",
+                              { duration: 6000 }
+                            );
+                            return;
+                          }
+                        }
+                        const appointmentId = await saveAppointment();
+                        if (!appointmentId) {
                           return;
                         }
-                        if (hasOverlap()) {
-                          toast.error(
-                            "In diesem Zeitraum liegt schon ein Termin.",
-                            { duration: 6000 }
-                          );
-                          return;
-                        }
-                      }
-                      saveAppointment();
-                      resetForm();
-                      toast(
-                        "Der Termin ist im Kalender gespeichert. Sie werden zum Kunden anlegen weitergeleitet."
-                      );
-                      setTimeout(() => {
-                        navigate("/new-customer");
-                      }, 1200);
+                        resetForm();
+                        toast(
+                          "Der Termin ist im Kalender gespeichert. Sie werden zum Kunden anlegen weitergeleitet."
+                        );
+                        setTimeout(() => {
+                          navigate("/new-customer", {
+                            state: { appointmentId },
+                          });
+                        }, 1200);
+                      })();
                     }}
                   >
                     Speichern + Neuer Kunde anlegen
@@ -341,26 +416,31 @@ export function NewDate() {
                       if (!validateRequired()) {
                         return;
                       }
-                      if (!editingAppointment) {
-                        if (isEndBeforeStart()) {
-                          toast.error(
-                            "Endzeit darf nicht vor der Startzeit liegen.",
-                            { duration: 6000 }
-                          );
+                      (async () => {
+                        if (!editingAppointment) {
+                          if (isEndBeforeStart()) {
+                            toast.error(
+                              "Endzeit darf nicht vor der Startzeit liegen.",
+                              { duration: 6000 }
+                            );
+                            return;
+                          }
+                          if (await hasOverlap()) {
+                            toast.error(
+                              "In diesem Zeitraum liegt schon ein Termin.",
+                              { duration: 6000 }
+                            );
+                            return;
+                          }
+                        }
+                        const appointmentId = await saveAppointment();
+                        if (!appointmentId) {
                           return;
                         }
-                        if (hasOverlap()) {
-                          toast.error(
-                            "In diesem Zeitraum liegt schon ein Termin.",
-                            { duration: 6000 }
-                          );
-                          return;
-                        }
-                      }
-                      saveAppointment();
-                      resetForm();
-                      console.log("Der Termin ist im Kalender gespeichert.");
-                      toast("Der Termin ist im Kalender gespeichert.");
+                        resetForm();
+                        console.log("Der Termin ist im Kalender gespeichert.");
+                        toast("Der Termin ist im Kalender gespeichert.");
+                      })();
                     }}
                   >
                     Speichern

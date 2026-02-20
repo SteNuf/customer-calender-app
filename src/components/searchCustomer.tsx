@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { supabase } from "@/lib/supabase";
 
 type Customer = {
+  id: number;
   title: string;
   lastName: string;
   firstName: string;
@@ -18,7 +20,21 @@ type Customer = {
   createdAt: string;
 };
 
-const STORAGE_KEY = "customers";
+type CustomerRow = {
+  id: number;
+  created_at: string;
+  titel: string | null;
+  name: string | null;
+  vorname: string | null;
+  geburtstag: string | null;
+  strasse: string | null;
+  plz: number | null;
+  city: string | null;
+  festnetznr: string | null;
+  handynr: string | null;
+  email: string | null;
+  website: string | null;
+};
 
 export function SearchCustomer() {
   const [sidebarHoverOpen, setSidebarHoverOpen] = useState(true);
@@ -36,31 +52,59 @@ export function SearchCustomer() {
   const query = (searchParams.get("query") ?? "").trim();
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+    if (!query) {
       setCustomers([]);
       return;
     }
-    try {
-      const parsed = JSON.parse(raw) as Customer[];
-      setCustomers(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setCustomers([]);
-    }
-  }, []);
 
-  const deleteCustomer = (createdAt: string) => {
-    const ok = window.confirm(
-      "Möchten Sie den Kunden wirklich löschen?"
-    );
+    const loadCustomers = async () => {
+      const { data, error } = await supabase
+        .from("customer")
+        .select(
+          "id, created_at, titel, name, vorname, geburtstag, strasse, plz, city, festnetznr, handynr, email, website",
+        )
+        .or(`name.ilike.%${query}%,vorname.ilike.%${query}%`)
+        .order("name", { ascending: true })
+        .order("vorname", { ascending: true });
+
+      if (error) {
+        console.error("Failed to load customers:", error.message);
+        setCustomers([]);
+        return;
+      }
+
+      const mapped = (data as CustomerRow[]).map((row) => ({
+        id: row.id,
+        title: row.titel ?? "",
+        lastName: row.name ?? "",
+        firstName: row.vorname ?? "",
+        birthDate: row.geburtstag ?? "",
+        street: row.strasse ?? "",
+        zip: row.plz?.toString() ?? "",
+        city: row.city ?? "",
+        phone: row.festnetznr ?? "",
+        mobile: row.handynr ?? "",
+        email: row.email ?? "",
+        website: row.website ?? "",
+        createdAt: row.created_at ?? "",
+      }));
+      setCustomers(mapped);
+    };
+
+    loadCustomers();
+  }, [query]);
+
+  const deleteCustomer = async (id: number) => {
+    const ok = window.confirm("Möchten Sie den Kunden wirklich löschen?");
     if (!ok) {
       return;
     }
-    setCustomers((prev) => {
-      const next = prev.filter((item) => item.createdAt !== createdAt);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+    const { error } = await supabase.from("customer").delete().eq("id", id);
+    if (error) {
+      console.error("Failed to delete customer:", error.message);
+      return;
+    }
+    setCustomers((prev) => prev.filter((item) => item.id !== id));
   };
 
   const results = useMemo(() => {
@@ -126,7 +170,7 @@ export function SearchCustomer() {
                   <div className="flex flex-col gap-4">
                     {results.map((customer) => (
                       <div
-                        key={customer.createdAt}
+                        key={customer.id}
                         className="flex items-center justify-between gap-4 rounded-md border border-input px-4 py-3"
                       >
                         <div>
@@ -155,7 +199,7 @@ export function SearchCustomer() {
                           type="button"
                           className="rounded p-1 transition-colors hover:bg-muted"
                           onClick={() => {
-                            deleteCustomer(customer.createdAt);
+                            deleteCustomer(customer.id);
                           }}
                           aria-label="Löschen"
                         >

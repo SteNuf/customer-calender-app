@@ -1,4 +1,4 @@
-﻿import "./App.css";
+import "./App.css";
 import { useCallback, useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -9,8 +9,10 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Toaster } from "@/components/ui/sonner";
+import { supabase } from "@/lib/supabase";
 
 type Appointment = {
+  id: number;
   title: string;
   startDate: string;
   endDate: string;
@@ -20,53 +22,102 @@ type Appointment = {
   createdAt: string;
 };
 
-const STORAGE_KEY = "appointments";
+type AppointmentRow = {
+  id: number;
+  created_at: string;
+  grund: string | null;
+  startzeitpkt: string | null;
+  endzeitpkt: string | null;
+  status: string | null;
+};
 
-function HomePage() {
+const splitDateTime = (value: string | null) => {
+  if (!value) {
+    return { date: "", time: "" };
+  }
+  const date = value.slice(0, 10);
+  const time = value.slice(11, 16);
+  return { date, time };
+};
+
+function HomePage({ showAll }: { showAll: boolean }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const navigate = useNavigate();
 
-  const loadAppointments = () => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+  const loadAppointments = useCallback(async () => {
+    const baseQuery = supabase
+      .from("termine")
+      .select("id, created_at, grund, startzeitpkt, endzeitpkt, status")
+      .order("startzeitpkt", { ascending: true });
+
+    const query = showAll
+      ? baseQuery
+      : (() => {
+          const now = new Date();
+          const startOfDay = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            0,
+            0,
+            0,
+            0,
+          );
+          const endOfDay = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() + 1,
+            0,
+            0,
+            0,
+            0,
+          );
+          return baseQuery
+            .gte("startzeitpkt", startOfDay.toISOString())
+            .lt("startzeitpkt", endOfDay.toISOString());
+        })();
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Failed to load appointments:", error.message);
       setAppointments([]);
       return;
     }
 
-    try {
-      const parsed = JSON.parse(raw) as Appointment[];
-      setAppointments(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setAppointments([]);
-    }
-  };
+    const mapped = (data as AppointmentRow[]).map((row) => {
+      const start = splitDateTime(row.startzeitpkt);
+      const end = splitDateTime(row.endzeitpkt);
+      return {
+        id: row.id,
+        title: row.grund ?? "",
+        startDate: start.date,
+        endDate: end.date,
+        startTime: start.time,
+        endTime: end.time,
+        status: row.status ?? "",
+        createdAt: row.created_at ?? "",
+      };
+    });
+    setAppointments(mapped);
+  }, [showAll]);
 
-  const deleteAppointment = (createdAt: string) => {
-    const next = appointments.filter((item) => item.createdAt !== createdAt);
-    setAppointments(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  const deleteAppointment = async (id: number) => {
+    const ok = window.confirm("Möchten Sie den Termin wirklich löschen?");
+    if (!ok) {
+      return;
+    }
+    const { error } = await supabase.from("termine").delete().eq("id", id);
+    if (error) {
+      console.error("Failed to delete appointment:", error.message);
+      return;
+    }
+    await loadAppointments();
   };
 
   useEffect(() => {
     loadAppointments();
-
-    const handleUpdated = () => {
-      loadAppointments();
-    };
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        loadAppointments();
-      }
-    };
-
-    window.addEventListener("appointments:updated", handleUpdated);
-    window.addEventListener("storage", handleStorage);
-    return () => {
-      window.removeEventListener("appointments:updated", handleUpdated);
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, []);
+  }, [loadAppointments]);
 
   return (
     <div className="flex h-full justify-center pt-6">
@@ -86,8 +137,8 @@ function HomePage() {
           ) : null}
           {appointments.map((item, index) => (
             <Card
-              key={`${item.createdAt}-${index}`}
-              className="w-full max-w-700px cursor-pointer transition-shadow hover:shadow-md"
+              key={`${item.id}-${index}`}
+              className="w-full max-w-175 cursor-pointer transition-shadow hover:shadow-md"
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-center gap-2">
@@ -113,7 +164,7 @@ function HomePage() {
                     type="button"
                     className="ml-3 rounded p-1 transition-colors hover:bg-muted"
                     onClick={() => {
-                      navigate("/new-date", { state: { appointment: item } });
+                      navigate("/new-date", { state: { appointmentId: item.id } });
                     }}
                     aria-label="Bearbeiten"
                   >
@@ -137,7 +188,7 @@ function HomePage() {
                     type="button"
                     className="ml-4 rounded p-1 transition-colors hover:bg-muted"
                     onClick={() => {
-                      deleteAppointment(item.createdAt);
+                      deleteAppointment(item.id);
                     }}
                     aria-label="Löschen"
                   >
@@ -169,6 +220,7 @@ function HomePage() {
 
 function AppLayout() {
   const [sidebarHoverOpen, setSidebarHoverOpen] = useState(false);
+  const [showAllAppointments, setShowAllAppointments] = useState(false);
   const handleSidebarEnter = useCallback(() => {
     setSidebarHoverOpen(true);
   }, []);
@@ -194,9 +246,13 @@ function AppLayout() {
         onNewCustomerClick={() => {
           navigate("/new-customer");
         }}
+        showAllAppointments={showAllAppointments}
+        onToggleAllAppointments={() => {
+          setShowAllAppointments((prev) => !prev);
+        }}
       />
       <SidebarInset>
-        <HomePage />
+        <HomePage showAll={showAllAppointments} />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -1,10 +1,12 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { supabase } from "@/lib/supabase";
 
 type Customer = {
+  id: number;
   title: string;
   lastName: string;
   firstName: string;
@@ -18,8 +20,6 @@ type Customer = {
   website: string;
   createdAt: string;
 };
-
-const STORAGE_KEY = "customers";
 
 export function NewCustomer() {
   const [sidebarHoverOpen, setSidebarHoverOpen] = useState(true);
@@ -54,6 +54,8 @@ export function NewCustomer() {
   const location = useLocation();
   const editingCustomer = (location.state as { customer?: Customer } | null)
     ?.customer;
+  const appointmentId = (location.state as { appointmentId?: number } | null)
+    ?.appointmentId;
 
   const validateRequired = () => {
     const nextErrors = {
@@ -120,33 +122,57 @@ export function NewCustomer() {
     });
     setPrefilled(true);
   }, [location.state, prefilled]);
-  const saveCustomer = () => {
-    const customer: Customer = {
-      title: title.trim(),
-      lastName: lastName.trim(),
-      firstName: firstName.trim(),
-      birthDate,
-      street: street.trim(),
-      zip: zip.trim(),
+  const saveCustomer = async () => {
+    const payload = {
+      titel: title.trim(),
+      name: lastName.trim(),
+      vorname: firstName.trim(),
+      geburtstag: birthDate,
+      strasse: street.trim(),
+      plz: zip.trim() ? Number(zip.trim()) : null,
       city: city.trim(),
-      phone: phone.trim(),
-      mobile: mobile.trim(),
+      festnetznr: phone.trim(),
+      handynr: mobile.trim(),
       email: email.trim(),
       website: website.trim(),
-      createdAt: editingCustomer?.createdAt ?? new Date().toISOString(),
     };
 
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const list = raw ? (JSON.parse(raw) as Customer[]) : [];
-      const next = editingCustomer
-        ? list.map((item) =>
-            item.createdAt === editingCustomer.createdAt ? customer : item,
-          )
-        : [...list, customer];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([customer]));
+    if (editingCustomer?.id) {
+      const { error } = await supabase
+        .from("customer")
+        .update(payload)
+        .eq("id", editingCustomer.id);
+      if (error) {
+        toast.error(`Speichern fehlgeschlagen: ${error.message}`);
+        return null;
+      }
+      return editingCustomer.id;
+    }
+
+    const { data, error } = await supabase
+      .from("customer")
+      .insert(payload)
+      .select("id")
+      .single();
+
+    if (error || !data) {
+      toast.error(`Speichern fehlgeschlagen: ${error?.message ?? "Unbekannt"}`);
+      return null;
+    }
+
+    return data.id as number;
+  };
+
+  const linkAppointmentToCustomer = async (customerId: number) => {
+    if (!appointmentId) {
+      return;
+    }
+    const { error } = await supabase
+      .from("termine")
+      .update({ customer_id: customerId })
+      .eq("id", appointmentId);
+    if (error) {
+      toast.error(`Termin-Zuordnung fehlgeschlagen: ${error.message}`);
     }
   };
 
@@ -330,9 +356,15 @@ export function NewCustomer() {
                     if (!validateRequired()) {
                       return;
                     }
-                    saveCustomer();
-                    toast("Der Kunde wurde gespeichert.");
-                    resetForm();
+                    (async () => {
+                      const customerId = await saveCustomer();
+                      if (!customerId) {
+                        return;
+                      }
+                      await linkAppointmentToCustomer(customerId);
+                      toast("Der Kunde wurde gespeichert.");
+                      resetForm();
+                    })();
                   }}
                 >
                   Speichern
@@ -344,10 +376,16 @@ export function NewCustomer() {
                     if (!validateRequired()) {
                       return;
                     }
-                    saveCustomer();
-                    toast("Der Kunde wurde gespeichert.");
-                    resetForm();
-                    navigate("/new-date");
+                    (async () => {
+                      const customerId = await saveCustomer();
+                      if (!customerId) {
+                        return;
+                      }
+                      await linkAppointmentToCustomer(customerId);
+                      toast("Der Kunde wurde gespeichert.");
+                      resetForm();
+                      navigate("/new-date");
+                    })();
                   }}
                 >
                   Speichern + Neuer Termin
