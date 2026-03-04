@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import {
@@ -136,9 +135,11 @@ export function NewDate() {
   const isEndBeforeStart = () => {
     const start = toDateTime(startDate, startTime);
     const end = toDateTime(endDate, endTime);
-    return Number.isFinite(start.getTime()) &&
+    return (
+      Number.isFinite(start.getTime()) &&
       Number.isFinite(end.getTime()) &&
-      end <= start;
+      end <= start
+    );
   };
 
   const hasOverlap = async () => {
@@ -210,10 +211,16 @@ export function NewDate() {
       }
 
       const start = data.startzeitpkt
-        ? { date: data.startzeitpkt.slice(0, 10), time: data.startzeitpkt.slice(11, 16) }
+        ? {
+            date: data.startzeitpkt.slice(0, 10),
+            time: data.startzeitpkt.slice(11, 16),
+          }
         : { date: "", time: "" };
       const end = data.endzeitpkt
-        ? { date: data.endzeitpkt.slice(0, 10), time: data.endzeitpkt.slice(11, 16) }
+        ? {
+            date: data.endzeitpkt.slice(0, 10),
+            time: data.endzeitpkt.slice(11, 16),
+          }
         : { date: "", time: "" };
 
       setTitle(data.grund ?? "");
@@ -380,14 +387,14 @@ export function NewDate() {
                           if (isEndBeforeStart()) {
                             toast.error(
                               "Endzeit darf nicht vor der Startzeit liegen.",
-                              { duration: 6000 }
+                              { duration: 6000 },
                             );
                             return;
                           }
                           if (await hasOverlap()) {
                             toast.error(
                               "In diesem Zeitraum liegt schon ein Termin.",
-                              { duration: 6000 }
+                              { duration: 6000 },
                             );
                             return;
                           }
@@ -398,7 +405,7 @@ export function NewDate() {
                         }
                         resetForm();
                         toast(
-                          "Der Termin ist im Kalender gespeichert. Sie werden zum Kunden anlegen weitergeleitet."
+                          "Der Termin ist im Kalender gespeichert. Sie werden zum Kunden anlegen weitergeleitet.",
                         );
                         setTimeout(() => {
                           navigate("/new-customer", {
@@ -421,14 +428,14 @@ export function NewDate() {
                           if (isEndBeforeStart()) {
                             toast.error(
                               "Endzeit darf nicht vor der Startzeit liegen.",
-                              { duration: 6000 }
+                              { duration: 6000 },
                             );
                             return;
                           }
                           if (await hasOverlap()) {
                             toast.error(
                               "In diesem Zeitraum liegt schon ein Termin.",
-                              { duration: 6000 }
+                              { duration: 6000 },
                             );
                             return;
                           }
