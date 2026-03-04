@@ -164,7 +164,9 @@ function HomePage({ showAll }: { showAll: boolean }) {
                     type="button"
                     className="ml-3 rounded p-1 transition-colors hover:bg-muted"
                     onClick={() => {
-                      navigate("/new-date", { state: { appointmentId: item.id } });
+                      navigate("/new-date", {
+                        state: { appointmentId: item.id },
+                      });
                     }}
                     aria-label="Bearbeiten"
                   >
@@ -260,7 +262,7 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/customer-calender-app">
       <Routes>
         <Route path="/" element={<AppLayout />} />
         <Route path="/new-date" element={<NewDate />} />
