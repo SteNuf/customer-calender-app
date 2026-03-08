@@ -26,7 +26,7 @@ export function SearchForm({ ...props }: React.ComponentProps<"form">) {
       }}
     >
       <SidebarGroup className="py-0">
-        <SidebarGroupContent className="relative w-full max-w-[12rem]">
+        <SidebarGroupContent className="relative w-[18.25rem]">
           <Label htmlFor="search" className="sr-only">
             Search
           </Label>

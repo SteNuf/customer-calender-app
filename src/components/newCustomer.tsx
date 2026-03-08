@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -22,7 +22,6 @@ type Customer = {
 };
 
 export function NewCustomer() {
-  const [sidebarHoverOpen, setSidebarHoverOpen] = useState(true);
   const [title, setTitle] = useState("");
   const [lastName, setLastName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -44,12 +43,6 @@ export function NewCustomer() {
     phone: "",
     email: "",
   });
-  const handleSidebarEnter = useCallback(() => {
-    setSidebarHoverOpen(true);
-  }, []);
-  const handleSidebarLeave = useCallback(() => {
-    setSidebarHoverOpen(false);
-  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   const editingCustomer = (location.state as { customer?: Customer } | null)
@@ -178,14 +171,9 @@ export function NewCustomer() {
 
   return (
     <SidebarProvider
-      open={sidebarHoverOpen}
-      onOpenChange={setSidebarHoverOpen}
-      style={{ "--sidebar-width": "720px" } as React.CSSProperties}
+      open={true}
+      style={{ "--sidebar-width": "820px" } as React.CSSProperties}
     >
-      <div
-        className="fixed inset-y-0 left-0 z-20 hidden w-3 md:block"
-        onMouseEnter={handleSidebarEnter}
-      />
       <AppSidebar
         side="left"
         collapsible="offcanvas"
@@ -195,8 +183,9 @@ export function NewCustomer() {
         onBackClick={() => {
           navigate("/");
         }}
-        onMouseEnter={handleSidebarEnter}
-        onMouseLeave={handleSidebarLeave}
+        onAllCustomersClick={() => {
+          navigate("/search-customer");
+        }}
       />
       <SidebarInset>
         <main className="min-h-screen w-full">

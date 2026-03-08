@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -23,6 +23,13 @@ type Appointment = {
   createdAt: string;
 };
 
+type CustomerOption = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+};
+
 const toTimestampString = (date: string, time: string) => {
   if (!date || !time) {
     return "";
@@ -31,12 +38,19 @@ const toTimestampString = (date: string, time: string) => {
 };
 
 export function NewDate() {
-  const [sidebarHoverOpen, setSidebarHoverOpen] = useState(true);
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [customers, setCustomers] = useState<CustomerOption[]>([]);
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<CustomerOption | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(
+    null
+  );
   const [status, setStatus] = useState("Auswählen");
   const [prefilled, setPrefilled] = useState(false);
   const [errors, setErrors] = useState({
@@ -47,12 +61,6 @@ export function NewDate() {
     endTime: "",
     status: "",
   });
-  const handleSidebarEnter = useCallback(() => {
-    setSidebarHoverOpen(true);
-  }, []);
-  const handleSidebarLeave = useCallback(() => {
-    setSidebarHoverOpen(false);
-  }, []);
   const navigate = useNavigate();
   const location = useLocation();
   const editingAppointment = (
@@ -63,6 +71,68 @@ export function NewDate() {
   )?.appointmentId;
   const editingAppointmentId =
     editingAppointment?.id ?? appointmentIdFromState ?? null;
+
+  useEffect(() => {
+    const loadCustomers = async () => {
+      const { data, error } = await supabase
+        .from("customer")
+        .select("id, name, vorname, festnetznr")
+        .order("name", { ascending: true })
+        .order("vorname", { ascending: true });
+
+      if (error) {
+        console.error("Failed to load customers:", error.message);
+        setCustomers([]);
+        return;
+      }
+
+      const mapped = (
+        data as Array<{
+          id: number;
+          name: string | null;
+          vorname: string | null;
+          festnetznr: string | null;
+        }>
+      ).map((row) => ({
+        id: row.id,
+        firstName: row.vorname ?? "",
+        lastName: row.name ?? "",
+        phone: row.festnetznr ?? "",
+      }));
+      setCustomers(mapped);
+    };
+
+    loadCustomers();
+  }, []);
+
+  const filteredCustomers = useMemo(() => {
+    const normalized = customerQuery.trim().toLowerCase();
+    if (!normalized) {
+      return customers;
+    }
+    return customers.filter((customer) => {
+      const first = customer.firstName.toLowerCase();
+      const last = customer.lastName.toLowerCase();
+      return (
+        first.includes(normalized) ||
+        last.includes(normalized) ||
+        `${first} ${last}`.includes(normalized)
+      );
+    });
+  }, [customers, customerQuery]);
+
+  useEffect(() => {
+    if (selectedCustomerId === null) {
+      setSelectedCustomer(null);
+      return;
+    }
+
+    const match = customers.find((customer) => customer.id === selectedCustomerId);
+    if (match) {
+      setSelectedCustomer(match);
+      setCustomerQuery(`${match.firstName} ${match.lastName}`.trim());
+    }
+  }, [customers, selectedCustomerId]);
 
   const validateRequired = () => {
     const nextErrors = {
@@ -83,6 +153,9 @@ export function NewDate() {
     setEndDate("");
     setStartTime("");
     setEndTime("");
+    setCustomerQuery("");
+    setSelectedCustomer(null);
+    setSelectedCustomerId(null);
     setStatus("Auswählen");
     setErrors({
       title: "",
@@ -100,6 +173,7 @@ export function NewDate() {
       startzeitpkt: toTimestampString(startDate, startTime),
       endzeitpkt: toTimestampString(endDate, endTime),
       status,
+      customer_id: selectedCustomerId ?? selectedCustomer?.id ?? null,
     };
 
     if (editingAppointmentId) {
@@ -199,7 +273,7 @@ export function NewDate() {
     const loadAppointment = async () => {
       const { data, error } = await supabase
         .from("termine")
-        .select("id, grund, startzeitpkt, endzeitpkt, status")
+        .select("id, grund, startzeitpkt, endzeitpkt, status, customer_id")
         .eq("id", editingAppointmentId)
         .maybeSingle();
 
@@ -229,6 +303,7 @@ export function NewDate() {
       setStartTime(start.time);
       setEndTime(end.time);
       setStatus(data.status ?? "Auswählen");
+      setSelectedCustomerId(data.customer_id ?? null);
       setErrors({
         title: "",
         startDate: "",
@@ -245,14 +320,9 @@ export function NewDate() {
 
   return (
     <SidebarProvider
-      open={sidebarHoverOpen}
-      onOpenChange={setSidebarHoverOpen}
-      style={{ "--sidebar-width": "720px" } as React.CSSProperties}
+      open={true}
+      style={{ "--sidebar-width": "820px" } as React.CSSProperties}
     >
-      <div
-        className="fixed inset-y-0 left-0 z-20 hidden w-3 md:block"
-        onMouseEnter={handleSidebarEnter}
-      />
       <AppSidebar
         side="left"
         collapsible="offcanvas"
@@ -262,8 +332,13 @@ export function NewDate() {
         onBackClick={() => {
           navigate("/");
         }}
-        onMouseEnter={handleSidebarEnter}
-        onMouseLeave={handleSidebarLeave}
+        onAllCustomersClick={() => {
+          navigate("/search-customer");
+        }}
+        onToggleAllAppointments={() => {
+          navigate("/", { state: { showAllAppointments: true } });
+        }}
+        showAllAppointments={false}
       />
       <SidebarInset>
         <main className="min-h-screen w-full">
@@ -285,6 +360,73 @@ export function NewDate() {
                 {errors.title ? (
                   <p className="mt-2 text-sm text-red-600">{errors.title}</p>
                 ) : null}
+                <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
+                  <span className="w-24">Kunde:</span>
+                  <div className="relative w-full max-w-sm">
+                    <input
+                      type="text"
+                      value={customerQuery}
+                      onChange={(event) => {
+                        setCustomerQuery(event.target.value);
+                        setSelectedCustomer(null);
+                        setSelectedCustomerId(null);
+                        setCustomerOpen(true);
+                      }}
+                      onFocus={() => {
+                        setCustomerOpen(true);
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          setCustomerOpen(false);
+                        }, 150);
+                      }}
+                      placeholder="Kunden suchen..."
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                    {customerOpen ? (
+                      <div className="absolute z-10 mt-2 max-h-48 w-full overflow-auto rounded-md border border-input bg-popover shadow-md">
+                        {filteredCustomers.length > 0 ? (
+                          <div className="py-1">
+                            {filteredCustomers.map((customer) => (
+                              <button
+                                key={customer.id}
+                                type="button"
+                                className="flex w-full items-center px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  setSelectedCustomer(customer);
+                                  setSelectedCustomerId(customer.id);
+                                  setCustomerQuery(
+                                    `${customer.firstName} ${customer.lastName}`.trim()
+                                  );
+                                  setCustomerOpen(false);
+                                }}
+                              >
+                                <span className="flex-1">
+                                  {customer.firstName} {customer.lastName}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {customer.phone || "--"}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            Keine Kunden gefunden.
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                    {selectedCustomer ? (
+                      <input
+                        type="hidden"
+                        name="customerId"
+                        value={selectedCustomer.id}
+                      />
+                    ) : null}
+                  </div>
+                </div>
                 <div className="mt-6 flex items-center gap-2 text-xl text-muted-foreground">
                   <span>Datum:</span>
                   <input

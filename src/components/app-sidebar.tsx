@@ -6,7 +6,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 import { Calendar } from "@/components/ui/calendar";
 import { SearchForm } from "@/components/search-form";
@@ -21,6 +20,8 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   onNewCustomerClick?: () => void;
   showAllAppointments?: boolean;
   onToggleAllAppointments?: () => void;
+  onAllCustomersClick?: () => void;
+  showAllCustomersButton?: boolean;
 };
 
 export function AppSidebar({
@@ -32,6 +33,8 @@ export function AppSidebar({
   onNewCustomerClick,
   showAllAppointments = false,
   onToggleAllAppointments,
+  onAllCustomersClick,
+  showAllCustomersButton = true,
   ...props
 }: AppSidebarProps) {
   const { theme, resolvedTheme, setTheme } = useTheme();
@@ -42,7 +45,7 @@ export function AppSidebar({
     <Sidebar {...props}>
       <SidebarContent className="items-center">
         {showBackButton ? (
-          <SidebarMenu className="mt-4 w-full max-w-[12rem]">
+          <SidebarMenu className="mt-4 w-[18.25rem]">
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -56,7 +59,7 @@ export function AppSidebar({
           </SidebarMenu>
         ) : null}
         {showActionButtons ? (
-          <SidebarMenu className="mt-8 gap-8 w-full max-w-[12rem]">
+          <SidebarMenu className="mt-8 gap-8 w-[18.25rem]">
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -80,11 +83,11 @@ export function AppSidebar({
           </SidebarMenu>
         ) : null}
         {showSearch ? (
-          <div className="mt-6 w-full max-w-[12rem]">
+          <div className="mt-6 w-[18.25rem]">
             <SearchForm />
           </div>
         ) : null}
-        <SidebarMenu className="mt-4 w-full max-w-[12rem]">
+        <SidebarMenu className="mt-4 w-[18.25rem]">
           <SidebarMenuItem>
             <SidebarMenuButton
               className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -96,8 +99,22 @@ export function AppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        {showAllCustomersButton ? (
+          <SidebarMenu className="mt-4 w-[18.25rem]">
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
+                onClick={() => {
+                  onAllCustomersClick?.();
+                }}
+              >
+                Alle Kunden
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : null}
         <div className="mt-auto w-full pb-2 self-stretch">
-          <SidebarMenu className="mb-4 w-full max-w-[12rem]">
+          <SidebarMenu className="mb-4 w-[18.25rem]">
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -114,7 +131,6 @@ export function AppSidebar({
           </div>
         </div>
       </SidebarContent>
-      <SidebarRail />
     </Sidebar>
   );
 }

@@ -1,6 +1,12 @@
 import "./App.css";
 import { useCallback, useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NewDate } from "@/components/newDate";
 import { NewCustomer } from "@/components/newCustomer";
@@ -142,6 +148,16 @@ function HomePage({ showAll }: { showAll: boolean }) {
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-center gap-2">
+                  {showAll ? (
+                    <Badge
+                      variant="outline"
+                      className="inline-flex w-32 justify-center"
+                    >
+                      {item.startDate
+                        ? new Date(item.startDate).toLocaleDateString("de-DE")
+                        : "--.--.----"}
+                    </Badge>
+                  ) : null}
                   <Badge className="inline-flex w-16 justify-center">
                     {item.startTime || "--:--"}
                   </Badge>
@@ -221,36 +237,42 @@ function HomePage({ showAll }: { showAll: boolean }) {
 }
 
 function AppLayout() {
-  const [sidebarHoverOpen, setSidebarHoverOpen] = useState(false);
   const [showAllAppointments, setShowAllAppointments] = useState(false);
-  const handleSidebarEnter = useCallback(() => {
-    setSidebarHoverOpen(true);
-  }, []);
-  const handleSidebarLeave = useCallback(() => {
-    setSidebarHoverOpen(false);
-  }, []);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const nextShowAll = (location.state as { showAllAppointments?: boolean } | null)
+      ?.showAllAppointments;
+    if (typeof nextShowAll === "boolean") {
+      setShowAllAppointments(nextShowAll);
+    }
+  }, [location.state]);
 
   return (
-    <SidebarProvider open={sidebarHoverOpen} onOpenChange={setSidebarHoverOpen}>
-      <div
-        className="fixed inset-y-0 left-0 z-20 hidden w-3 md:block"
-        onMouseEnter={handleSidebarEnter}
-      />
+    <SidebarProvider
+      open={true}
+      style={{ "--sidebar-width": "700px" } as React.CSSProperties}
+    >
       <AppSidebar
         side="left"
         collapsible="offcanvas"
-        onMouseEnter={handleSidebarEnter}
-        onMouseLeave={handleSidebarLeave}
         onNewDateClick={() => {
           navigate("/new-date");
         }}
         onNewCustomerClick={() => {
           navigate("/new-customer");
         }}
+        onAllCustomersClick={() => {
+          navigate("/search-customer");
+        }}
         showAllAppointments={showAllAppointments}
         onToggleAllAppointments={() => {
-          setShowAllAppointments((prev) => !prev);
+          setShowAllAppointments((prev) => {
+            const next = !prev;
+            navigate("/", { replace: true, state: { showAllAppointments: next } });
+            return next;
+          });
         }}
       />
       <SidebarInset>
