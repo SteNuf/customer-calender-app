@@ -25,8 +25,8 @@ export function SearchForm({ ...props }: React.ComponentProps<"form">) {
         navigate(`/search-customer?query=${encodeURIComponent(trimmed)}`);
       }}
     >
-      <SidebarGroup className="py-0">
-        <SidebarGroupContent className="relative w-[18.25rem]">
+      <SidebarGroup className="px-0 py-0">
+        <SidebarGroupContent className="relative w-full">
           <Label htmlFor="search" className="sr-only">
             Search
           </Label>

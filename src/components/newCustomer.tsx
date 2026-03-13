@@ -186,6 +186,10 @@ export function NewCustomer() {
         onAllCustomersClick={() => {
           navigate("/search-customer");
         }}
+        onToggleAllAppointments={() => {
+          navigate("/?appointments=all");
+        }}
+        showAllAppointments={false}
       />
       <SidebarInset>
         <main className="min-h-screen w-full">

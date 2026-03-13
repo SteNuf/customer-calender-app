@@ -145,7 +145,7 @@ export function SearchCustomer() {
           navigate("/search-customer");
         }}
         onToggleAllAppointments={() => {
-          navigate("/", { state: { showAllAppointments: true } });
+          navigate("/?appointments=all");
         }}
         showAllAppointments={false}
       />

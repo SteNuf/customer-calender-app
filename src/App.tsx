@@ -4,8 +4,8 @@ import {
   BrowserRouter,
   Route,
   Routes,
-  useLocation,
   useNavigate,
+  useSearchParams,
 } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
 import { NewDate } from "@/components/newDate";
@@ -25,6 +25,7 @@ type Appointment = {
   startTime: string;
   endTime: string;
   status: string;
+  customerName: string;
   createdAt: string;
 };
 
@@ -35,6 +36,23 @@ type AppointmentRow = {
   startzeitpkt: string | null;
   endzeitpkt: string | null;
   status: string | null;
+  customer:
+    | {
+        vorname: string | null;
+        name: string | null;
+      }
+    | {
+        vorname: string | null;
+        name: string | null;
+      }[]
+    | null;
+};
+
+const getCustomerName = (customer: AppointmentRow["customer"]) => {
+  const customerData = Array.isArray(customer) ? customer[0] : customer;
+  const firstName = customerData?.vorname?.trim() ?? "";
+  const lastName = customerData?.name?.trim() ?? "";
+  return `${firstName} ${lastName}`.trim();
 };
 
 const splitDateTime = (value: string | null) => {
@@ -51,14 +69,20 @@ function HomePage({ showAll }: { showAll: boolean }) {
   const navigate = useNavigate();
 
   const loadAppointments = useCallback(async () => {
-    const baseQuery = supabase
-      .from("termine")
-      .select("id, created_at, grund, startzeitpkt, endzeitpkt, status")
-      .order("startzeitpkt", { ascending: true });
-
     const query = showAll
-      ? baseQuery
+      ? supabase
+          .from("termine")
+          .select(
+            "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
+          )
+          .order("startzeitpkt", { ascending: false })
       : (() => {
+          const baseQuery = supabase
+            .from("termine")
+            .select(
+              "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
+            )
+            .order("startzeitpkt", { ascending: true });
           const now = new Date();
           const startOfDay = new Date(
             now.getFullYear(),
@@ -102,6 +126,7 @@ function HomePage({ showAll }: { showAll: boolean }) {
         startTime: start.time,
         endTime: end.time,
         status: row.status ?? "",
+        customerName: getCustomerName(row.customer),
         createdAt: row.created_at ?? "",
       };
     });
@@ -144,7 +169,7 @@ function HomePage({ showAll }: { showAll: boolean }) {
           {appointments.map((item, index) => (
             <Card
               key={`${item.id}-${index}`}
-              className="w-full max-w-175 cursor-pointer transition-shadow hover:shadow-md"
+              className="w-full max-w-[48.75rem] cursor-pointer transition-shadow hover:shadow-md"
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-center gap-2">
@@ -170,6 +195,11 @@ function HomePage({ showAll }: { showAll: boolean }) {
                   <span className="inline-block w-40 text-left text-sm text-muted-foreground">
                     {item.title || "Termin"}
                   </span>
+                  {showAll ? (
+                    <span className="inline-block w-40 text-left text-sm text-muted-foreground">
+                      {item.customerName}
+                    </span>
+                  ) : null}
                   <Badge
                     variant="outline"
                     className="inline-flex w-28 justify-center"
@@ -237,22 +267,14 @@ function HomePage({ showAll }: { showAll: boolean }) {
 }
 
 function AppLayout() {
-  const [showAllAppointments, setShowAllAppointments] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    const nextShowAll = (location.state as { showAllAppointments?: boolean } | null)
-      ?.showAllAppointments;
-    if (typeof nextShowAll === "boolean") {
-      setShowAllAppointments(nextShowAll);
-    }
-  }, [location.state]);
+  const [searchParams] = useSearchParams();
+  const showAllAppointments = searchParams.get("appointments") === "all";
 
   return (
     <SidebarProvider
       open={true}
-      style={{ "--sidebar-width": "700px" } as React.CSSProperties}
+      style={{ "--sidebar-width": "750px" } as React.CSSProperties}
     >
       <AppSidebar
         side="left"
@@ -268,11 +290,10 @@ function AppLayout() {
         }}
         showAllAppointments={showAllAppointments}
         onToggleAllAppointments={() => {
-          setShowAllAppointments((prev) => {
-            const next = !prev;
-            navigate("/", { replace: true, state: { showAllAppointments: next } });
-            return next;
-          });
+          navigate(
+            showAllAppointments ? "/" : "/?appointments=all",
+            { replace: true },
+          );
         }}
       />
       <SidebarInset>
