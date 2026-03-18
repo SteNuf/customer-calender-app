@@ -169,7 +169,7 @@ function HomePage({ showAll }: { showAll: boolean }) {
           {appointments.map((item, index) => (
             <Card
               key={`${item.id}-${index}`}
-              className="w-full max-w-[48.75rem] cursor-pointer transition-shadow hover:shadow-md"
+              className="w-full max-w-195 cursor-pointer transition-shadow hover:shadow-md"
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-center gap-2">
