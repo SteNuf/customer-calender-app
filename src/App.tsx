@@ -290,10 +290,9 @@ function AppLayout() {
         }}
         showAllAppointments={showAllAppointments}
         onToggleAllAppointments={() => {
-          navigate(
-            showAllAppointments ? "/" : "/?appointments=all",
-            { replace: true },
-          );
+          navigate(showAllAppointments ? "/" : "/?appointments=all", {
+            replace: true,
+          });
         }}
       />
       <SidebarInset>
