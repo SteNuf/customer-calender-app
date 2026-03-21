@@ -64,48 +64,64 @@ const splitDateTime = (value: string | null) => {
   return { date, time };
 };
 
-function HomePage({ showAll }: { showAll: boolean }) {
+function HomePage({ showAll, selectedDate }: { showAll: boolean; selectedDate?: Date }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const navigate = useNavigate();
 
   const loadAppointments = useCallback(async () => {
-    const query = showAll
-      ? supabase
-          .from("termine")
-          .select(
-            "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
-          )
-          .order("startzeitpkt", { ascending: false })
-      : (() => {
-          const baseQuery = supabase
-            .from("termine")
-            .select(
-              "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
-            )
-            .order("startzeitpkt", { ascending: true });
-          const now = new Date();
-          const startOfDay = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            0,
-            0,
-            0,
-            0,
-          );
-          const endOfDay = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() + 1,
-            0,
-            0,
-            0,
-            0,
-          );
-          return baseQuery
-            .gte("startzeitpkt", startOfDay.toISOString())
-            .lt("startzeitpkt", endOfDay.toISOString());
-        })();
+    let query = supabase
+      .from("termine")
+      .select(
+        "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
+      )
+      .order("startzeitpkt", { ascending: selectedDate ? true : false });
+
+    if (selectedDate) {
+      const startOfDay = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        0,
+        0,
+        0,
+        0,
+      );
+      const endOfDay = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate() + 1,
+        0,
+        0,
+        0,
+        0,
+      );
+      query = query
+        .gte("startzeitpkt", startOfDay.toISOString())
+        .lt("startzeitpkt", endOfDay.toISOString());
+    } else if (!showAll) {
+      const now = new Date();
+      const startOfDay = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        0,
+        0,
+        0,
+        0,
+      );
+      const endOfDay = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0,
+        0,
+        0,
+        0,
+      );
+      query = query
+        .gte("startzeitpkt", startOfDay.toISOString())
+        .lt("startzeitpkt", endOfDay.toISOString());
+    }
 
     const { data, error } = await query;
 
@@ -131,7 +147,7 @@ function HomePage({ showAll }: { showAll: boolean }) {
       };
     });
     setAppointments(mapped);
-  }, [showAll]);
+  }, [showAll, selectedDate]);
 
   const deleteAppointment = async (id: number) => {
     const ok = window.confirm("Möchten Sie den Termin wirklich löschen?");
@@ -153,18 +169,33 @@ function HomePage({ showAll }: { showAll: boolean }) {
   return (
     <div className="flex h-full justify-center pt-6">
       <div className="text-center">
-        <h1 className="text-4xl font-semibold">Heute</h1>
-        <p className="mt-2 text-base text-muted-foreground">
-          {new Date().toLocaleDateString("de-DE", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
+        <h1 className="text-4xl font-semibold">
+          {selectedDate
+            ? selectedDate.toLocaleDateString("de-DE", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : showAll
+            ? "Alle Termine"
+            : "Heute"}
+        </h1>
+        {!selectedDate && (
+          <p className="mt-2 text-base text-muted-foreground">
+            {new Date().toLocaleDateString("de-DE", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        )}
         <div className="mt-20 flex flex-col items-center gap-6">
           {appointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Keine Termine</p>
+            <p className="text-sm text-muted-foreground">
+              {selectedDate ? "Keine Termine für diesen Tag" : "Keine Termine"}
+            </p>
           ) : null}
           {appointments.map((item, index) => (
             <Card
@@ -195,7 +226,7 @@ function HomePage({ showAll }: { showAll: boolean }) {
                   <span className="inline-block w-40 text-left text-sm text-muted-foreground">
                     {item.title || "Termin"}
                   </span>
-                  {showAll ? (
+                  {showAll || selectedDate ? (
                     <span className="inline-block w-40 text-left text-sm text-muted-foreground">
                       {item.customerName}
                     </span>
@@ -270,6 +301,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const showAllAppointments = searchParams.get("appointments") === "all";
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   return (
     <SidebarProvider
@@ -294,9 +326,11 @@ function AppLayout() {
             replace: true,
           });
         }}
+        onDateSelect={setSelectedDate}
+        selectedDate={selectedDate}
       />
       <SidebarInset>
-        <HomePage showAll={showAllAppointments} />
+        <HomePage showAll={showAllAppointments} selectedDate={selectedDate} />
       </SidebarInset>
     </SidebarProvider>
   );

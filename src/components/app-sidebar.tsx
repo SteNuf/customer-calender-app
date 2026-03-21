@@ -22,6 +22,8 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   onToggleAllAppointments?: () => void;
   onAllCustomersClick?: () => void;
   showAllCustomersButton?: boolean;
+  onDateSelect?: (date: Date | undefined) => void;
+  selectedDate?: Date;
 };
 
 export function AppSidebar({
@@ -35,6 +37,8 @@ export function AppSidebar({
   onToggleAllAppointments,
   onAllCustomersClick,
   showAllCustomersButton = true,
+  onDateSelect,
+  selectedDate,
   ...props
 }: AppSidebarProps) {
   const { theme, resolvedTheme, setTheme } = useTheme();
@@ -45,7 +49,7 @@ export function AppSidebar({
     <Sidebar {...props}>
       <SidebarContent className="items-center">
         {showBackButton ? (
-          <SidebarMenu className="mt-4 w-[18.25rem]">
+          <SidebarMenu className="mt-4 w-73">
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -59,7 +63,7 @@ export function AppSidebar({
           </SidebarMenu>
         ) : null}
         {showActionButtons ? (
-          <SidebarMenu className="mt-8 gap-8 w-[18.25rem]">
+          <SidebarMenu className="mt-8 gap-8 w-73">
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -83,11 +87,11 @@ export function AppSidebar({
           </SidebarMenu>
         ) : null}
         {showSearch ? (
-          <div className="mt-6 w-[18.25rem]">
+          <div className="mt-6 w-73">
             <SearchForm />
           </div>
         ) : null}
-        <SidebarMenu className="mt-4 w-[18.25rem]">
+        <SidebarMenu className="mt-4 w-73">
           <SidebarMenuItem>
             <SidebarMenuButton
               className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -100,7 +104,7 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
         {showAllCustomersButton ? (
-          <SidebarMenu className="mt-4 w-[18.25rem]">
+          <SidebarMenu className="mt-4 w-73">
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -114,7 +118,7 @@ export function AppSidebar({
           </SidebarMenu>
         ) : null}
         <div className="mt-auto w-full pb-2 self-stretch">
-          <SidebarMenu className="mb-4 w-[18.25rem]">
+          <SidebarMenu className="mb-4 w-73">
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="justify-center text-center border border-input hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer w-full"
@@ -127,7 +131,7 @@ export function AppSidebar({
             </SidebarMenuItem>
           </SidebarMenu>
           <div className="mb-6 w-full">
-            <Calendar className="w-full" />
+            <Calendar selected={selectedDate} onSelect={onDateSelect} mode="single" className="w-full" />
           </div>
         </div>
       </SidebarContent>
