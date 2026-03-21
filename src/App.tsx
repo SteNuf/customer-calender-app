@@ -64,7 +64,13 @@ const splitDateTime = (value: string | null) => {
   return { date, time };
 };
 
-function HomePage({ showAll, selectedDate }: { showAll: boolean; selectedDate?: Date }) {
+function HomePage({
+  showAll,
+  selectedDate,
+}: {
+  showAll: boolean;
+  selectedDate?: Date;
+}) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const navigate = useNavigate();
 
@@ -178,8 +184,8 @@ function HomePage({ showAll, selectedDate }: { showAll: boolean; selectedDate?: 
                 day: "numeric",
               })
             : showAll
-            ? "Alle Termine"
-            : "Heute"}
+              ? "Alle Termine"
+              : "Heute"}
         </h1>
         {!selectedDate && (
           <p className="mt-2 text-base text-muted-foreground">

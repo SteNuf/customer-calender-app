@@ -131,7 +131,12 @@ export function AppSidebar({
             </SidebarMenuItem>
           </SidebarMenu>
           <div className="mb-6 w-full">
-            <Calendar selected={selectedDate} onSelect={onDateSelect} mode="single" className="w-full" />
+            <Calendar
+              selected={selectedDate}
+              onSelect={onDateSelect}
+              mode="single"
+              className="w-full"
+            />
           </div>
         </div>
       </SidebarContent>
