@@ -334,6 +334,10 @@ function AppLayout() {
         }}
         onDateSelect={setSelectedDate}
         selectedDate={selectedDate}
+        showBackButton={selectedDate !== undefined}
+        onBackClick={() => {
+          setSelectedDate(undefined);
+        }}
       />
       <SidebarInset>
         <HomePage showAll={showAllAppointments} selectedDate={selectedDate} />
