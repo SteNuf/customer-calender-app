@@ -80,9 +80,11 @@ function HomePage({
       .select(
         "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
       )
-      .order("startzeitpkt", { ascending: selectedDate ? true : false });
+      .order("startzeitpkt", { ascending: showAll ? false : true });
 
-    if (selectedDate) {
+    if (showAll) {
+      // No filter, show all appointments
+    } else if (selectedDate) {
       const startOfDay = new Date(
         selectedDate.getFullYear(),
         selectedDate.getMonth(),
@@ -104,7 +106,7 @@ function HomePage({
       query = query
         .gte("startzeitpkt", startOfDay.toISOString())
         .lt("startzeitpkt", endOfDay.toISOString());
-    } else if (!showAll) {
+    } else {
       const now = new Date();
       const startOfDay = new Date(
         now.getFullYear(),
@@ -176,18 +178,18 @@ function HomePage({
     <div className="flex h-full justify-center pt-6">
       <div className="text-center">
         <h1 className="text-4xl font-semibold">
-          {selectedDate
-            ? selectedDate.toLocaleDateString("de-DE", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })
-            : showAll
-              ? "Alle Termine"
+          {showAll
+            ? "Alle Termine"
+            : selectedDate
+              ? selectedDate.toLocaleDateString("de-DE", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
               : "Heute"}
         </h1>
-        {!selectedDate && (
+        {!showAll && !selectedDate && (
           <p className="mt-2 text-base text-muted-foreground">
             {new Date().toLocaleDateString("de-DE", {
               weekday: "long",
@@ -200,7 +202,7 @@ function HomePage({
         <div className="mt-20 flex flex-col items-center gap-6">
           {appointments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {selectedDate ? "Keine Termine für diesen Tag" : "Keine Termine"}
+              {showAll ? "Keine Termine" : selectedDate ? "Keine Termine für diesen Tag" : "Keine Termine"}
             </p>
           ) : null}
           {appointments.map((item, index) => (
