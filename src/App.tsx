@@ -202,7 +202,11 @@ function HomePage({
         <div className="mt-20 flex flex-col items-center gap-6">
           {appointments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {showAll ? "Keine Termine" : selectedDate ? "Keine Termine für diesen Tag" : "Keine Termine"}
+              {showAll
+                ? "Keine Termine"
+                : selectedDate
+                  ? "Keine Termine für diesen Tag"
+                  : "Keine Termine"}
             </p>
           ) : null}
           {appointments.map((item, index) => (
