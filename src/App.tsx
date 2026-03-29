@@ -328,6 +328,10 @@ function AppLayout() {
         }}
         showAllAppointments={showAllAppointments}
         onToggleAllAppointments={() => {
+          if (showAllAppointments) {
+            // Switching to "Heutige Termine", reset selected date
+            setSelectedDate(undefined);
+          }
           navigate(showAllAppointments ? "/" : "/?appointments=all", {
             replace: true,
           });
