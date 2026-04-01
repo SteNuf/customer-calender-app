@@ -80,7 +80,9 @@ function HomePage({
       .select(
         "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
       )
-      .order("startzeitpkt", { ascending: showAll && !selectedDate ? false : true });
+      .order("startzeitpkt", {
+        ascending: showAll && !selectedDate ? false : true,
+      });
 
     if (selectedDate) {
       const startOfDay = new Date(
