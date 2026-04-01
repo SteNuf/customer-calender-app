@@ -80,11 +80,9 @@ function HomePage({
       .select(
         "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
       )
-      .order("startzeitpkt", { ascending: showAll ? false : true });
+      .order("startzeitpkt", { ascending: showAll && !selectedDate ? false : true });
 
-    if (showAll) {
-      // No filter, show all appointments
-    } else if (selectedDate) {
+    if (selectedDate) {
       const startOfDay = new Date(
         selectedDate.getFullYear(),
         selectedDate.getMonth(),
@@ -106,6 +104,8 @@ function HomePage({
       query = query
         .gte("startzeitpkt", startOfDay.toISOString())
         .lt("startzeitpkt", endOfDay.toISOString());
+    } else if (showAll) {
+      // No filter, show all appointments
     } else {
       const now = new Date();
       const startOfDay = new Date(
@@ -178,18 +178,18 @@ function HomePage({
     <div className="flex h-full justify-center pt-6">
       <div className="text-center">
         <h1 className="text-4xl font-semibold">
-          {showAll
-            ? "Alle Termine"
-            : selectedDate
-              ? selectedDate.toLocaleDateString("de-DE", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })
+          {selectedDate
+            ? selectedDate.toLocaleDateString("de-DE", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : showAll
+              ? "Alle Termine"
               : "Heute"}
         </h1>
-        {!showAll && !selectedDate && (
+        {!selectedDate && !showAll && (
           <p className="mt-2 text-base text-muted-foreground">
             {new Date().toLocaleDateString("de-DE", {
               weekday: "long",
@@ -202,10 +202,10 @@ function HomePage({
         <div className="mt-20 flex flex-col items-center gap-6">
           {appointments.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              {showAll
-                ? "Keine Termine"
-                : selectedDate
-                  ? "Keine Termine für diesen Tag"
+              {selectedDate
+                ? "Keine Termine für diesen Tag"
+                : showAll
+                  ? "Keine Termine"
                   : "Keine Termine"}
             </p>
           ) : null}
@@ -216,7 +216,7 @@ function HomePage({
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-center gap-2">
-                  {showAll ? (
+                  {showAll && !selectedDate ? (
                     <Badge
                       variant="outline"
                       className="inline-flex w-32 justify-center"
