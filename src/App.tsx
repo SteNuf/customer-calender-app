@@ -317,13 +317,13 @@ function AppLayout() {
   const showAllAppointments = searchParams.get("appointments") === "all";
   const selectedDateParam = searchParams.get("date");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    selectedDateParam ? new Date(selectedDateParam) : undefined
+    selectedDateParam ? new Date(selectedDateParam) : undefined,
   );
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
     if (date) {
-      navigate(`/?date=${date.toISOString().split('T')[0]}`, { replace: true });
+      navigate(`/?date=${date.toISOString().split("T")[0]}`, { replace: true });
     } else {
       navigate("/", { replace: true });
     }
