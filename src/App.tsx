@@ -315,7 +315,29 @@ function AppLayout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const showAllAppointments = searchParams.get("appointments") === "all";
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const selectedDateParam = searchParams.get("date");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    selectedDateParam ? new Date(selectedDateParam) : undefined
+  );
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      navigate(`/?date=${date.toISOString().split('T')[0]}`, { replace: true });
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
+
+  const handleToggleAllAppointments = () => {
+    if (showAllAppointments) {
+      // Switching to "Heutige Termine", reset selected date
+      setSelectedDate(undefined);
+      navigate("/", { replace: true });
+    } else {
+      navigate("/?appointments=all", { replace: true });
+    }
+  };
 
   return (
     <SidebarProvider
@@ -335,20 +357,13 @@ function AppLayout() {
           navigate("/search-customer");
         }}
         showAllAppointments={showAllAppointments}
-        onToggleAllAppointments={() => {
-          if (showAllAppointments) {
-            // Switching to "Heutige Termine", reset selected date
-            setSelectedDate(undefined);
-          }
-          navigate(showAllAppointments ? "/" : "/?appointments=all", {
-            replace: true,
-          });
-        }}
-        onDateSelect={setSelectedDate}
+        onToggleAllAppointments={handleToggleAllAppointments}
+        onDateSelect={handleDateSelect}
         selectedDate={selectedDate}
         showBackButton={selectedDate !== undefined}
         onBackClick={() => {
           setSelectedDate(undefined);
+          navigate("/", { replace: true });
         }}
       />
       <SidebarInset>

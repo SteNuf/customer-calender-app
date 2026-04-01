@@ -115,7 +115,7 @@ export function SearchCustomer() {
       const lastCompare = (a.lastName ?? "").localeCompare(
         b.lastName ?? "",
         "de",
-        { sensitivity: "base" }
+        { sensitivity: "base" },
       );
       if (lastCompare !== 0) {
         return lastCompare;
@@ -148,17 +148,22 @@ export function SearchCustomer() {
           navigate("/?appointments=all");
         }}
         showAllAppointments={false}
+        onDateSelect={(date) => {
+          if (date) {
+            navigate(`/?date=${date.toISOString().split("T")[0]}`);
+          } else {
+            navigate("/");
+          }
+        }}
       />
       <SidebarInset>
         <main className="min-h-screen w-full">
           <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12">
-            <h1 className="text-3xl font-semibold text-center">
-              Kundensuche
-            </h1>
+            <h1 className="text-3xl font-semibold text-center">Kundensuche</h1>
             <p className="text-center text-sm text-muted-foreground">
               {query ? `Suchbegriff: ${query}` : "Alle Kunden"}
             </p>
-            <div className="mx-auto w-full max-w-[37rem] text-left mt-8">
+            <div className="mx-auto w-full max-w-148 text-left mt-8">
               {results.length > 0 ? (
                 <div className="flex flex-col gap-4">
                   {results.map((customer) => (
