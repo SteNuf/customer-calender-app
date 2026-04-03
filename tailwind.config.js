@@ -3,7 +3,7 @@ export default {
   theme: {
     extend: {
       maxWidth: {
-        148: '37rem',
+        148: "37rem",
       },
     },
   },
