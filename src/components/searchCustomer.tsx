@@ -1,7 +1,11 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { supabase } from "@/lib/supabase";
 
 type Customer = {
@@ -89,7 +93,7 @@ export function SearchCustomer() {
   }, [query]);
 
   const deleteCustomer = async (id: number) => {
-    const ok = window.confirm("MÃ¶chten Sie den Kunden wirklich lÃ¶schen?");
+    const ok = window.confirm("Möchten Sie den Kunden wirklich löschen?");
     if (!ok) {
       return;
     }
@@ -131,7 +135,7 @@ export function SearchCustomer() {
       open={true}
       style={
         {
-          "--sidebar-width": "700px",
+          "--sidebar-width": "min(22rem, 100vw)",
           "--sidebar-width-icon": "3rem",
         } as React.CSSProperties
       }
@@ -162,21 +166,26 @@ export function SearchCustomer() {
         }}
       />
       <SidebarInset>
+        <div className="sticky top-0 z-20 flex justify-start bg-background/95 px-4 py-3 backdrop-blur xl:hidden">
+          <SidebarTrigger />
+        </div>
         <main className="min-h-screen w-full">
-          <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12">
-            <h1 className="text-3xl font-semibold text-center">Kundensuche</h1>
+          <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-8 sm:gap-6 sm:px-6 sm:py-12 md:max-w-4xl md:px-8">
+            <h1 className="text-center text-2xl font-semibold sm:text-3xl md:text-4xl">
+              Kundensuche
+            </h1>
             <p className="text-center text-sm text-muted-foreground">
               {query ? `Suchbegriff: ${query}` : "Alle Kunden"}
             </p>
-            <div className="mx-auto w-full max-w-148 text-left mt-8">
+            <div className="mx-auto mt-4 w-full max-w-2xl text-left sm:mt-8 md:max-w-3xl">
               {results.length > 0 ? (
                 <div className="flex flex-col gap-4">
                   {results.map((customer) => (
                     <div
                       key={customer.id}
-                      className="flex items-center justify-between gap-4 rounded-md border border-input px-4 py-3"
+                      className="flex flex-col gap-4 rounded-md border border-input px-4 py-3 sm:flex-row sm:items-start sm:justify-between md:px-5 md:py-4"
                     >
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <div className="text-base font-medium">
                           <button
                             type="button"
@@ -190,38 +199,68 @@ export function SearchCustomer() {
                             {customer.firstName} {customer.lastName}
                           </button>
                         </div>
-                        <div className="mt-1 text-sm text-muted-foreground">
-                          {customer.street}, {customer.zip} {customer.city}
+                        <div className="mt-1 flex items-start justify-between gap-3">
+                          <div className="wrap-break-word text-sm text-muted-foreground">
+                            {customer.street}, {customer.zip} {customer.city}
+                          </div>
+                          <div className="flex shrink-0 justify-end xl:hidden">
+                            <button
+                              type="button"
+                              className="rounded p-1 transition-colors hover:bg-muted"
+                              onClick={() => {
+                                deleteCustomer(customer.id);
+                              }}
+                              aria-label="Löschen"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                className="size-5 text-red-600"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
-                        <div className="mt-1 text-sm text-muted-foreground">
+                        <div className="mt-1 wrap-break-word text-sm text-muted-foreground">
                           {customer.phone}
                           {customer.mobile ? ` / ${customer.mobile}` : ""}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        className="rounded p-1 transition-colors hover:bg-muted"
-                        onClick={() => {
-                          deleteCustomer(customer.id);
-                        }}
-                        aria-label="LÃ¶schen"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="1.5"
-                          stroke="currentColor"
-                          className="size-5 text-red-600"
-                          aria-hidden="true"
+                      <div className="hidden xl:flex xl:justify-start xl:self-auto">
+                        <button
+                          type="button"
+                          className="rounded p-1 transition-colors hover:bg-muted"
+                          onClick={() => {
+                            deleteCustomer(customer.id);
+                          }}
+                          aria-label="Löschen"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth="1.5"
+                            stroke="currentColor"
+                            className="size-5 text-red-600"
+                            aria-hidden="true"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

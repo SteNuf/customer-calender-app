@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { supabase } from "@/lib/supabase";
 
 type Customer = {
@@ -49,6 +53,7 @@ export function NewCustomer() {
     ?.customer;
   const appointmentId = (location.state as { appointmentId?: number } | null)
     ?.appointmentId;
+  const pageTitle = editingCustomer ? "Bestandskunde" : "Neuer Kunde";
 
   const validateRequired = () => {
     const nextErrors = {
@@ -93,28 +98,35 @@ export function NewCustomer() {
     if (!customer || prefilled) {
       return;
     }
-    setTitle(customer.title ?? "");
-    setLastName(customer.lastName ?? "");
-    setFirstName(customer.firstName ?? "");
-    setBirthDate(customer.birthDate ?? "");
-    setStreet(customer.street ?? "");
-    setZip(customer.zip ?? "");
-    setCity(customer.city ?? "");
-    setPhone(customer.phone ?? "");
-    setMobile(customer.mobile ?? "");
-    setEmail(customer.email ?? "");
-    setWebsite(customer.website ?? "");
-    setErrors({
-      lastName: "",
-      firstName: "",
-      street: "",
-      zip: "",
-      city: "",
-      phone: "",
-      email: "",
-    });
-    setPrefilled(true);
+    const timeoutId = window.setTimeout(() => {
+      setTitle(customer.title ?? "");
+      setLastName(customer.lastName ?? "");
+      setFirstName(customer.firstName ?? "");
+      setBirthDate(customer.birthDate ?? "");
+      setStreet(customer.street ?? "");
+      setZip(customer.zip ?? "");
+      setCity(customer.city ?? "");
+      setPhone(customer.phone ?? "");
+      setMobile(customer.mobile ?? "");
+      setEmail(customer.email ?? "");
+      setWebsite(customer.website ?? "");
+      setErrors({
+        lastName: "",
+        firstName: "",
+        street: "",
+        zip: "",
+        city: "",
+        phone: "",
+        email: "",
+      });
+      setPrefilled(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [location.state, prefilled]);
+
   const saveCustomer = async () => {
     const payload = {
       titel: title.trim(),
@@ -174,7 +186,7 @@ export function NewCustomer() {
       open={true}
       style={
         {
-          "--sidebar-width": "700px",
+          "--sidebar-width": "min(22rem, 100vw)",
           "--sidebar-width-icon": "3rem",
         } as React.CSSProperties
       }
@@ -197,159 +209,166 @@ export function NewCustomer() {
         showAllAppointments={false}
       />
       <SidebarInset>
+        <div className="sticky top-0 z-20 flex justify-start bg-background/95 px-4 py-3 backdrop-blur xl:hidden">
+          <SidebarTrigger />
+        </div>
         <main className="min-h-screen w-full">
-          <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12">
-            <h1 className="text-3xl font-semibold text-center">Neuer Kunde</h1>
-            <div className="mx-auto w-full max-w-148 text-left mt-20">
-              <div className="flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Titel:</span>
+          <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12 md:max-w-4xl md:px-8">
+            <h1 className="text-center text-2xl font-semibold sm:text-3xl md:text-4xl">
+              {pageTitle}
+            </h1>
+            <div className="mx-auto mt-8 w-full max-w-2xl text-left sm:mt-12 md:max-w-3xl md:mt-14">
+              <div className="flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Titel:</span>
                 <input
                   type="text"
                   value={title}
                   onChange={(event) => {
                     setTitle(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Name: *</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Name: *</span>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(event) => {
                     setLastName(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               {errors.lastName ? (
                 <p className="mt-2 text-sm text-red-600">{errors.lastName}</p>
               ) : null}
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Vorname: *</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Vorname: *</span>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(event) => {
                     setFirstName(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               {errors.firstName ? (
                 <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>
               ) : null}
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Geburtsdatum:</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Geburtsdatum:</span>
                 <input
                   type="date"
                   value={birthDate}
                   onChange={(event) => {
                     setBirthDate(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Straße: *</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Straße: *</span>
                 <input
                   type="text"
                   value={street}
                   onChange={(event) => {
                     setStreet(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               {errors.street ? (
                 <p className="mt-2 text-sm text-red-600">{errors.street}</p>
               ) : null}
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Postleitzahl:*</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">
+                  Postleitzahl:*
+                </span>
                 <input
                   type="text"
                   value={zip}
                   onChange={(event) => {
                     setZip(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               {errors.zip ? (
                 <p className="mt-2 text-sm text-red-600">{errors.zip}</p>
               ) : null}
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Stadt: *</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Stadt: *</span>
                 <input
                   type="text"
                   value={city}
                   onChange={(event) => {
                     setCity(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               {errors.city ? (
                 <p className="mt-2 text-sm text-red-600">{errors.city}</p>
               ) : null}
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Telefon: *</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Telefon: *</span>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(event) => {
                     setPhone(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               {errors.phone ? (
                 <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
               ) : null}
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Handy:</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Handy:</span>
                 <input
                   type="tel"
                   value={mobile}
                   onChange={(event) => {
                     setMobile(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Email: *</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Email: *</span>
                 <input
                   type="email"
                   value={email}
                   onChange={(event) => {
                     setEmail(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               {errors.email ? (
                 <p className="mt-2 text-sm text-red-600">{errors.email}</p>
               ) : null}
-              <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                <span className="w-40">Website:</span>
+              <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                <span className="text-sm sm:w-40 sm:text-xl">Website:</span>
                 <input
                   type="url"
                   value={website}
                   onChange={(event) => {
                     setWebsite(event.target.value);
                   }}
-                  className="ml-8 h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-base text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               <p className="mt-3 text-sm text-muted-foreground">
                 * Bitte ausfüllen
               </p>
-              <div className="mt-24 flex w-full items-center justify-between gap-6">
+              <div className="mt-10 flex w-full flex-col gap-3 sm:mt-12 sm:flex-row sm:flex-wrap md:gap-4">
                 <button
                   type="button"
-                  className="min-w-40 rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                  className="w-full rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted sm:w-auto md:min-w-40"
                   onClick={() => {
                     if (!validateRequired()) {
                       return;
@@ -361,6 +380,10 @@ export function NewCustomer() {
                       }
                       await linkAppointmentToCustomer(customerId);
                       toast("Der Kunde wurde gespeichert.");
+                      if (editingCustomer?.id) {
+                        navigate("/search-customer");
+                        return;
+                      }
                       resetForm();
                     })();
                   }}
@@ -369,7 +392,7 @@ export function NewCustomer() {
                 </button>
                 <button
                   type="button"
-                  className="min-w-48 rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                  className="w-full rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted sm:w-auto md:min-w-52"
                   onClick={() => {
                     if (!validateRequired()) {
                       return;
@@ -390,10 +413,13 @@ export function NewCustomer() {
                 </button>
                 <button
                   type="button"
-                  className="min-w-32 rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                  className="w-full rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted sm:w-auto md:min-w-40"
                   onClick={() => {
+                    if (editingCustomer?.id) {
+                      navigate("/search-customer");
+                      return;
+                    }
                     resetForm();
-                    console.log("Abbrechen");
                   }}
                 >
                   Abbrechen

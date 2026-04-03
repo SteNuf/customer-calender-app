@@ -2,7 +2,11 @@
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import {
@@ -122,18 +126,24 @@ export function NewDate() {
   }, [customers, customerQuery]);
 
   useEffect(() => {
-    if (selectedCustomerId === null) {
-      setSelectedCustomer(null);
-      return;
-    }
+    const timeoutId = window.setTimeout(() => {
+      if (selectedCustomerId === null) {
+        setSelectedCustomer(null);
+        return;
+      }
 
-    const match = customers.find(
-      (customer) => customer.id === selectedCustomerId,
-    );
-    if (match) {
-      setSelectedCustomer(match);
-      setCustomerQuery(`${match.firstName} ${match.lastName}`.trim());
-    }
+      const match = customers.find(
+        (customer) => customer.id === selectedCustomerId,
+      );
+      if (match) {
+        setSelectedCustomer(match);
+        setCustomerQuery(`${match.firstName} ${match.lastName}`.trim());
+      }
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [customers, selectedCustomerId]);
 
   const validateRequired = () => {
@@ -250,21 +260,27 @@ export function NewDate() {
     if (!appointment || prefilled) {
       return;
     }
-    setTitle(appointment.title ?? "");
-    setStartDate(appointment.startDate ?? "");
-    setEndDate(appointment.endDate ?? "");
-    setStartTime(appointment.startTime ?? "");
-    setEndTime(appointment.endTime ?? "");
-    setStatus(appointment.status ?? "Auswählen");
-    setErrors({
-      title: "",
-      startDate: "",
-      endDate: "",
-      startTime: "",
-      endTime: "",
-      status: "",
-    });
-    setPrefilled(true);
+    const timeoutId = window.setTimeout(() => {
+      setTitle(appointment.title ?? "");
+      setStartDate(appointment.startDate ?? "");
+      setEndDate(appointment.endDate ?? "");
+      setStartTime(appointment.startTime ?? "");
+      setEndTime(appointment.endTime ?? "");
+      setStatus(appointment.status ?? "Auswählen");
+      setErrors({
+        title: "",
+        startDate: "",
+        endDate: "",
+        startTime: "",
+        endTime: "",
+        status: "",
+      });
+      setPrefilled(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [location.state, prefilled]);
 
   useEffect(() => {
@@ -325,7 +341,7 @@ export function NewDate() {
       open={true}
       style={
         {
-          "--sidebar-width": "700px",
+          "--sidebar-width": "min(22rem, 100vw)",
           "--sidebar-width-icon": "3rem",
         } as React.CSSProperties
       }
@@ -348,13 +364,16 @@ export function NewDate() {
         showAllAppointments={false}
       />
       <SidebarInset>
+        <div className="sticky top-0 z-20 flex justify-start bg-background/95 px-4 py-3 backdrop-blur xl:hidden">
+          <SidebarTrigger />
+        </div>
         <main className="min-h-screen w-full">
-          <div className="px-6 py-12">
-            <div className="mx-auto w-full max-w-md text-left">
-              <h1 className="text-3xl font-semibold text-center">
+          <div className="px-4 py-8 sm:px-6 sm:py-12 md:px-8">
+            <div className="mx-auto w-full max-w-2xl text-left md:max-w-3xl">
+              <h1 className="text-center text-2xl font-semibold sm:text-3xl md:text-4xl">
                 Neuer Termin
               </h1>
-              <div className="mt-20">
+              <div className="mt-8 sm:mt-12 md:mt-14">
                 <input
                   type="text"
                   placeholder="Text eingeben..."
@@ -367,9 +386,9 @@ export function NewDate() {
                 {errors.title ? (
                   <p className="mt-2 text-sm text-red-600">{errors.title}</p>
                 ) : null}
-                <div className="mt-6 flex items-center gap-4 text-xl text-muted-foreground">
-                  <span className="w-24">Kunde:</span>
-                  <div className="relative w-full max-w-sm">
+                <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                  <span className="text-sm sm:w-24 sm:text-xl">Kunde:</span>
+                  <div className="relative w-full">
                     <input
                       type="text"
                       value={customerQuery}
@@ -434,65 +453,77 @@ export function NewDate() {
                     ) : null}
                   </div>
                 </div>
-                <div className="mt-6 flex items-center gap-2 text-xl text-muted-foreground">
-                  <span>Datum:</span>
-                  <input
-                    type="date"
-                    aria-label="Startdatum"
-                    value={startDate}
-                    onChange={(event) => {
-                      setStartDate(event.target.value);
-                    }}
-                    className="h-8 rounded-md border border-input bg-secondary px-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                  <span>bis</span>
-                  <input
-                    type="date"
-                    aria-label="Enddatum"
-                    value={endDate}
-                    onChange={(event) => {
-                      setEndDate(event.target.value);
-                    }}
-                    className="h-8 rounded-md border border-input bg-secondary px-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
+                <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-start sm:gap-4 sm:text-xl">
+                  <span className="text-sm sm:w-24 sm:pt-2 sm:text-xl">
+                    Datum:
+                  </span>
+                  <div className="grid w-full gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                    <input
+                      type="date"
+                      aria-label="Startdatum"
+                      value={startDate}
+                      onChange={(event) => {
+                        setStartDate(event.target.value);
+                      }}
+                      className="h-10 w-full rounded-md border border-input bg-secondary px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                    <span className="text-sm sm:text-base">bis</span>
+                    <input
+                      type="date"
+                      aria-label="Enddatum"
+                      value={endDate}
+                      onChange={(event) => {
+                        setEndDate(event.target.value);
+                      }}
+                      className="h-10 w-full rounded-md border border-input bg-secondary px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </div>
                 </div>
                 {errors.startDate || errors.endDate ? (
                   <p className="mt-2 text-sm text-red-600">
                     {errors.startDate || errors.endDate}
                   </p>
                 ) : null}
-                <div className="mt-5 flex items-center gap-2 text-xl text-muted-foreground">
-                  <span>Uhrzeit:</span>
-                  <input
-                    type="time"
-                    aria-label="Startzeit"
-                    value={startTime}
-                    onChange={(event) => {
-                      setStartTime(event.target.value);
-                    }}
-                    className="h-8 rounded-md border border-input bg-secondary px-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
-                  <span>bis</span>
-                  <input
-                    type="time"
-                    aria-label="Endzeit"
-                    value={endTime}
-                    onChange={(event) => {
-                      setEndTime(event.target.value);
-                    }}
-                    className="h-8 rounded-md border border-input bg-secondary px-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  />
+                <div className="mt-5 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-start sm:gap-4 sm:text-xl">
+                  <span className="text-sm sm:w-24 sm:pt-2 sm:text-xl">
+                    Uhrzeit:
+                  </span>
+                  <div className="grid w-full gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                    <input
+                      type="time"
+                      aria-label="Startzeit"
+                      value={startTime}
+                      onChange={(event) => {
+                        setStartTime(event.target.value);
+                      }}
+                      className="h-10 w-full rounded-md border border-input bg-secondary px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                    <span className="text-sm sm:text-base">bis</span>
+                    <input
+                      type="time"
+                      aria-label="Endzeit"
+                      value={endTime}
+                      onChange={(event) => {
+                        setEndTime(event.target.value);
+                      }}
+                      className="h-10 w-full rounded-md border border-input bg-secondary px-3 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </div>
                 </div>
                 {errors.startTime || errors.endTime ? (
                   <p className="mt-2 text-sm text-red-600">
                     {errors.startTime || errors.endTime}
                   </p>
                 ) : null}
-                <div className="mt-5 flex items-center gap-2 text-xl text-muted-foreground">
-                  <span>Status:</span>
+                <div className="mt-5 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
+                  <span className="text-sm sm:w-24 sm:text-xl">Status:</span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
                         {status}
                       </Button>
                     </DropdownMenuTrigger>
@@ -524,8 +555,9 @@ export function NewDate() {
                 {errors.status ? (
                   <p className="mt-2 text-sm text-red-600">{errors.status}</p>
                 ) : null}
-                <div className="mt-12 flex items-center gap-3">
+                <div className="mt-10 flex flex-col gap-3 sm:mt-12 sm:flex-row sm:flex-wrap md:gap-4">
                   <Button
+                    className="w-full sm:w-auto md:min-w-52"
                     variant="default"
                     onClick={() => {
                       if (!validateRequired()) {
@@ -567,6 +599,7 @@ export function NewDate() {
                     Speichern + Neuer Kunde anlegen
                   </Button>
                   <Button
+                    className="w-full sm:w-auto md:min-w-40"
                     variant="secondary"
                     onClick={() => {
                       if (!validateRequired()) {
@@ -594,7 +627,6 @@ export function NewDate() {
                           return;
                         }
                         resetForm();
-                        console.log("Der Termin ist im Kalender gespeichert.");
                         toast("Der Termin ist im Kalender gespeichert.");
                       })();
                     }}
@@ -602,10 +634,17 @@ export function NewDate() {
                     Speichern
                   </Button>
                   <Button
+                    className="w-full sm:w-auto md:min-w-40"
                     variant="outline"
                     onClick={() => {
+                      if (editingAppointmentId) {
+                        toast("Der Vorgang ist abgebrochen.");
+                        setTimeout(() => {
+                          navigate("/");
+                        }, 1200);
+                        return;
+                      }
                       resetForm();
-                      console.log("Der Vorgang ist abgebrochen.");
                       toast("Der Vorgang ist abgebrochen.");
                     }}
                   >
