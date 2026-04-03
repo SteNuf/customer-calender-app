@@ -201,7 +201,7 @@ function HomePage({
 
   return (
     <div className="flex h-full justify-center px-4 pt-6 sm:px-6 sm:pt-8 md:px-8">
-      <div className="w-full max-w-4xl text-center md:max-w-5xl">
+      <div className="w-full max-w-4xl text-center md:max-w-5xl lg:pl-6 xl:pl-8 2xl:pl-0">
         <h1 className="text-2xl font-semibold sm:text-4xl">
           {selectedDate
             ? selectedDate.toLocaleDateString("de-DE", {
