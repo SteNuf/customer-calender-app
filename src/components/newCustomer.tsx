@@ -172,7 +172,7 @@ export function NewCustomer() {
   return (
     <SidebarProvider
       open={true}
-      style={{ "--sidebar-width": "820px" } as React.CSSProperties}
+      style={{ "--sidebar-width": "700px", "--sidebar-width-icon": "3rem" } as React.CSSProperties}
     >
       <AppSidebar
         side="left"
@@ -195,7 +195,7 @@ export function NewCustomer() {
         <main className="min-h-screen w-full">
           <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12">
             <h1 className="text-3xl font-semibold text-center">Neuer Kunde</h1>
-            <div className="mx-auto w-full max-w-[37rem] text-left mt-20">
+            <div className="mx-auto w-full max-w-148 text-left mt-20">
               <div className="flex items-center gap-4 text-xl text-muted-foreground">
                 <span className="w-40">Titel:</span>
                 <input
@@ -344,7 +344,7 @@ export function NewCustomer() {
               <div className="mt-24 flex w-full items-center justify-between gap-6">
                 <button
                   type="button"
-                  className="min-w-[10rem] rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                  className="min-w-40 rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                   onClick={() => {
                     if (!validateRequired()) {
                       return;
@@ -364,7 +364,7 @@ export function NewCustomer() {
                 </button>
                 <button
                   type="button"
-                  className="min-w-[12rem] rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                  className="min-w-48 rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                   onClick={() => {
                     if (!validateRequired()) {
                       return;
@@ -385,7 +385,7 @@ export function NewCustomer() {
                 </button>
                 <button
                   type="button"
-                  className="min-w-[8rem] rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                  className="min-w-32 rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                   onClick={() => {
                     resetForm();
                     console.log("Abbrechen");

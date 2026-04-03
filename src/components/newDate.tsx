@@ -49,7 +49,7 @@ export function NewDate() {
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(
-    null
+    null,
   );
   const [status, setStatus] = useState("Auswählen");
   const [prefilled, setPrefilled] = useState(false);
@@ -127,7 +127,9 @@ export function NewDate() {
       return;
     }
 
-    const match = customers.find((customer) => customer.id === selectedCustomerId);
+    const match = customers.find(
+      (customer) => customer.id === selectedCustomerId,
+    );
     if (match) {
       setSelectedCustomer(match);
       setCustomerQuery(`${match.firstName} ${match.lastName}`.trim());
@@ -321,7 +323,12 @@ export function NewDate() {
   return (
     <SidebarProvider
       open={true}
-      style={{ "--sidebar-width": "44rem", "--sidebar-width-icon": "3rem" } as React.CSSProperties}
+      style={
+        {
+          "--sidebar-width": "700px",
+          "--sidebar-width-icon": "3rem",
+        } as React.CSSProperties
+      }
     >
       <AppSidebar
         side="left"
@@ -397,7 +404,7 @@ export function NewDate() {
                                   setSelectedCustomer(customer);
                                   setSelectedCustomerId(customer.id);
                                   setCustomerQuery(
-                                    `${customer.firstName} ${customer.lastName}`.trim()
+                                    `${customer.firstName} ${customer.lastName}`.trim(),
                                   );
                                   setCustomerOpen(false);
                                 }}

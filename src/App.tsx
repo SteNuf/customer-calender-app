@@ -342,7 +342,7 @@ function AppLayout() {
   return (
     <SidebarProvider
       open={true}
-      style={{ "--sidebar-width": "750px" } as React.CSSProperties}
+      style={{ "--sidebar-width": "700px", "--sidebar-width-icon": "3rem" } as React.CSSProperties}
     >
       <AppSidebar
         side="left"
