@@ -321,7 +321,7 @@ export function NewDate() {
   return (
     <SidebarProvider
       open={true}
-      style={{ "--sidebar-width": "820px" } as React.CSSProperties}
+      style={{ "--sidebar-width": "44rem", "--sidebar-width-icon": "3rem" } as React.CSSProperties}
     >
       <AppSidebar
         side="left"
