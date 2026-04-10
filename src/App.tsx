@@ -562,11 +562,21 @@ function AppLayout() {
     }
   };
 
+  useEffect(() => {
+    if (showAllAppointments) {
+      setSelectedDate(undefined);
+      return;
+    }
+
+    setSelectedDate(selectedDateParam ? new Date(selectedDateParam) : undefined);
+  }, [selectedDateParam, showAllAppointments]);
+
   const handleToggleAllAppointments = () => {
     if (showAllAppointments) {
       setSelectedDate(undefined);
       navigate("/", { replace: true });
     } else {
+      setSelectedDate(undefined);
       navigate("/?appointments=all", { replace: true });
     }
   };

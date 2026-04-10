@@ -196,7 +196,6 @@ export function NewCustomer() {
         collapsible="offcanvas"
         showActionButtons={false}
         showBackButton
-        showSearch={false}
         onBackClick={() => {
           navigate("/");
         }}

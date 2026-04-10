@@ -47,13 +47,14 @@ export function AppSidebar({
 
   const primaryButtonClassName =
     "h-11 w-full cursor-pointer justify-center border border-input text-center hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+  const contentWidthClassName = "mx-auto w-full max-w-[19rem]";
 
   return (
     <Sidebar {...props}>
       <SidebarContent className="items-center">
         <div className="w-full px-4 pt-4">
           {showBackButton ? (
-            <SidebarMenu className="w-full">
+            <SidebarMenu className={contentWidthClassName}>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={primaryButtonClassName}
@@ -70,7 +71,9 @@ export function AppSidebar({
           )}
 
           {showActionButtons ? (
-            <SidebarMenu className="mt-6 w-full gap-4 sm:gap-6">
+            <SidebarMenu
+              className={`${contentWidthClassName} mt-6 gap-4 sm:gap-6`}
+            >
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={primaryButtonClassName}
@@ -93,63 +96,73 @@ export function AppSidebar({
               </SidebarMenuItem>
             </SidebarMenu>
           ) : (
-            <div className="mt-6 h-26" aria-hidden="true" />
+            <div className="mt-6 h-[7rem]" aria-hidden="true" />
           )}
         </div>
 
         {showSearch ? (
           <div className="mt-6 w-full px-4">
-            <SearchForm />
+            <div className={contentWidthClassName}>
+              <SearchForm />
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6 h-8 w-full px-4" aria-hidden="true" />
+        )}
+
+        <div className="mt-4 w-full px-4">
+          <SidebarMenu className={contentWidthClassName}>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className={primaryButtonClassName}
+                onClick={() => {
+                  onToggleAllAppointments?.();
+                }}
+              >
+                {showAllAppointments ? "Heutige Termine" : "Alle Termine"}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
+
+        {showAllCustomersButton ? (
+          <div className="mt-4 w-full px-4">
+            <SidebarMenu className={contentWidthClassName}>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={primaryButtonClassName}
+                  onClick={() => {
+                    onAllCustomersClick?.();
+                  }}
+                >
+                  Alle Kunden
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </div>
         ) : null}
 
-        <SidebarMenu className="mt-4 w-full px-4">
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className={primaryButtonClassName}
-              onClick={() => {
-                onToggleAllAppointments?.();
-              }}
-            >
-              {showAllAppointments ? "Heutige Termine" : "Alle Termine"}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
-        {showAllCustomersButton ? (
-          <SidebarMenu className="mt-4 w-full px-4">
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                className={primaryButtonClassName}
-                onClick={() => {
-                  onAllCustomersClick?.();
-                }}
-              >
-                Alle Kunden
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        ) : null}
-
-        <div className="mt-auto w-full self-stretch pb-2">
-          <SidebarMenu className="mb-4 w-full px-4">
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                className={primaryButtonClassName}
-                onClick={() => {
-                  setTheme(isDark ? "light" : "dark");
-                }}
-              >
-                {isDark ? "Hellmodus" : "Dunkelmodus"}
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-          <div className="mb-6 w-full px-2 sm:px-4">
+        <div className="mt-4 w-full self-stretch pb-2 xl:mt-auto">
+          <div className="mb-4 w-full px-4">
+            <SidebarMenu className={contentWidthClassName}>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={primaryButtonClassName}
+                  onClick={() => {
+                    setTheme(isDark ? "light" : "dark");
+                  }}
+                >
+                  {isDark ? "Hellmodus" : "Dunkelmodus"}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </div>
+          <div className="mb-6 w-full px-4">
             <Calendar
               selected={selectedDate}
               onSelect={onDateSelect}
               mode="single"
-              className="w-full"
+              className={contentWidthClassName}
             />
           </div>
         </div>

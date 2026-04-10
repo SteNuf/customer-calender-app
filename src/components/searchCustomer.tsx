@@ -145,7 +145,6 @@ export function SearchCustomer() {
         collapsible="offcanvas"
         showActionButtons={false}
         showBackButton
-        showSearch={false}
         showAllCustomersButton={false}
         onBackClick={() => {
           navigate("/");

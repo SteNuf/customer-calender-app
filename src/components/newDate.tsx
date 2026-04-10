@@ -351,7 +351,6 @@ export function NewDate() {
         collapsible="offcanvas"
         showActionButtons={false}
         showBackButton
-        showSearch={false}
         onBackClick={() => {
           navigate("/");
         }}
