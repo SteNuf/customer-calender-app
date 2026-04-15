@@ -521,7 +521,7 @@ export function NewDate() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full sm:w-auto"
+                        className="w-full sm:-ml-[9px] sm:w-auto"
                       >
                         {status}
                       </Button>
