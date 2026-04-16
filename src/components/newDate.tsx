@@ -51,7 +51,8 @@ export function NewDate() {
   });
   const navigate = useNavigate();
   const location = useLocation();
-  const { saveAppointment: saveAppointmentToContext, loadAppointments } = useAppointments();
+  const { saveAppointment: saveAppointmentToContext, loadAppointments } =
+    useAppointments();
   const editingAppointment = (
     location.state as { appointment?: Appointment } | null
   )?.appointment;

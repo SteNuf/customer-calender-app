@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { supabase } from "@/lib/supabase";
 import { type Appointment, type AppointmentRow } from "@/types/appointments";
 
@@ -213,9 +219,7 @@ export function AppointmentProvider({ children }: { children: ReactNode }) {
 export function useAppointments() {
   const context = useContext(AppointmentContext);
   if (!context) {
-    throw new Error(
-      "useAppointments must be used within AppointmentProvider",
-    );
+    throw new Error("useAppointments must be used within AppointmentProvider");
   }
   return context;
 }
