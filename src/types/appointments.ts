@@ -13,17 +13,17 @@ export type Appointment = {
 export type AppointmentRow = {
   id: number;
   created_at: string;
-  grund: string | null;
-  startzeitpkt: string | null;
-  endzeitpkt: string | null;
+  reasen: string | null;
+  startpoint: string | null;
+  endpoint: string | null;
   status: string | null;
   customer:
     | {
-        vorname: string | null;
+        firstname: string | null;
         name: string | null;
       }
     | {
-        vorname: string | null;
+        firstname: string | null;
         name: string | null;
       }[]
     | null;
@@ -38,7 +38,7 @@ export type CustomerOption = {
 
 export const getCustomerName = (customer: AppointmentRow["customer"]) => {
   const customerData = Array.isArray(customer) ? customer[0] : customer;
-  const firstName = customerData?.vorname?.trim() ?? "";
+  const firstName = customerData?.firstname?.trim() ?? "";
   const lastName = customerData?.name?.trim() ?? "";
   return `${firstName} ${lastName}`.trim();
 };

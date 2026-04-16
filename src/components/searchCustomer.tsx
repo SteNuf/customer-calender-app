@@ -29,12 +29,12 @@ type CustomerRow = {
   created_at: string;
   titel: string | null;
   name: string | null;
-  vorname: string | null;
+  firstname: string | null;
   geburtstag: string | null;
-  strasse: string | null;
-  plz: number | null;
+  street: string | null;
+  postalcode: number | null;
   city: string | null;
-  festnetznr: string | null;
+  landlinenr: string | null;
   handynr: string | null;
   email: string | null;
   website: string | null;
@@ -52,14 +52,14 @@ export function SearchCustomer() {
       let queryBuilder = supabase
         .from("customer")
         .select(
-          "id, created_at, titel, name, vorname, geburtstag, strasse, plz, city, festnetznr, handynr, email, website",
+          "id, created_at, titel, name, firstname, geburtstag, street, postalcode, city, landlinenr, handynr, email, website",
         )
         .order("name", { ascending: true })
-        .order("vorname", { ascending: true });
+        .order("firstname", { ascending: true });
 
       if (query) {
         queryBuilder = queryBuilder.or(
-          `name.ilike.%${query}%,vorname.ilike.%${query}%`,
+          `name.ilike.%${query}%,firstname.ilike.%${query}%`,
         );
       }
 
@@ -75,12 +75,12 @@ export function SearchCustomer() {
         id: row.id,
         title: row.titel ?? "",
         lastName: row.name ?? "",
-        firstName: row.vorname ?? "",
+        firstName: row.firstname ?? "",
         birthDate: row.geburtstag ?? "",
-        street: row.strasse ?? "",
-        zip: row.plz?.toString() ?? "",
+        street: row.street ?? "",
+        zip: row.postalcode?.toString() ?? "",
         city: row.city ?? "",
-        phone: row.festnetznr ?? "",
+        phone: row.landlinenr ?? "",
         mobile: row.handynr ?? "",
         email: row.email ?? "",
         website: row.website ?? "",

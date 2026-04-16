@@ -66,9 +66,9 @@ export function NewDate() {
     const loadCustomers = async () => {
       const { data, error } = await supabase
         .from("customer")
-        .select("id, name, vorname, festnetznr")
+        .select("id, name, firstname, landlinenr")
         .order("name", { ascending: true })
-        .order("vorname", { ascending: true });
+        .order("firstname", { ascending: true });
 
       if (error) {
         console.error("Failed to load customers:", error.message);
@@ -80,14 +80,14 @@ export function NewDate() {
         data as Array<{
           id: number;
           name: string | null;
-          vorname: string | null;
-          festnetznr: string | null;
+          firstname: string | null;
+          landlinenr: string | null;
         }>
       ).map((row) => ({
         id: row.id,
-        firstName: row.vorname ?? "",
+        firstName: row.firstname ?? "",
         lastName: row.name ?? "",
-        phone: row.festnetznr ?? "",
+        phone: row.landlinenr ?? "",
       }));
       setCustomers(mapped);
     };
@@ -167,7 +167,7 @@ export function NewDate() {
 
   const saveAppointment = async () => {
     const payload = {
-      grund: title.trim(),
+      reason: title.trim(),
       startpoint: toTimestampString(startDate, startTime),
       endpoint: toTimestampString(endDate, endTime),
       status,
@@ -210,9 +210,9 @@ export function NewDate() {
 
     let query = supabase
       .from("termine")
-      .select("id, startzeitpkt, endzeitpkt")
-      .lt("startzeitpkt", newEnd)
-      .gt("endzeitpkt", newStart);
+      .select("id, startpoint, endpoint")
+      .lt("startpoint", newEnd)
+      .gt("endpoint", newStart);
 
     if (editingAppointmentId) {
       query = query.neq("id", editingAppointmentId);
@@ -264,7 +264,7 @@ export function NewDate() {
     const loadAppointment = async () => {
       const { data, error } = await supabase
         .from("termine")
-        .select("id, grund, startzeitpkt, endzeitpkt, status, customer_id")
+        .select("id, reasen, startpoint, endpoint, status, customer_id")
         .eq("id", editingAppointmentId)
         .maybeSingle();
 
@@ -275,20 +275,20 @@ export function NewDate() {
         return;
       }
 
-      const start = data.startzeitpkt
+      const start = data.startpoint
         ? {
-            date: data.startzeitpkt.slice(0, 10),
-            time: data.startzeitpkt.slice(11, 16),
+            date: data.startpoint.slice(0, 10),
+            time: data.startpoint.slice(11, 16),
           }
         : { date: "", time: "" };
-      const end = data.endzeitpkt
+      const end = data.endpoint
         ? {
-            date: data.endzeitpkt.slice(0, 10),
-            time: data.endzeitpkt.slice(11, 16),
+            date: data.endpoint.slice(0, 10),
+            time: data.endpoint.slice(11, 16),
           }
         : { date: "", time: "" };
 
-      setTitle(data.grund ?? "");
+      setTitle(data.reasen ?? "");
       setStartDate(start.date);
       setEndDate(end.date);
       setStartTime(start.time);

@@ -14,7 +14,7 @@ interface AppointmentContextType {
   loadAppointments: (showAll: boolean, selectedDate?: Date) => Promise<void>;
   saveAppointment: (
     payload: {
-      grund: string;
+      reason: string;
       startpoint: string;
       endpoint: string;
       status: string;
@@ -40,7 +40,7 @@ const splitDateTime = (value: string | null) => {
 
 const getCustomerName = (customer: AppointmentRow["customer"]) => {
   const customerData = Array.isArray(customer) ? customer[0] : customer;
-  const firstName = customerData?.vorname?.trim() ?? "";
+  const firstName = customerData?.firstname?.trim() ?? "";
   const lastName = customerData?.name?.trim() ?? "";
   return `${firstName} ${lastName}`.trim();
 };
@@ -56,9 +56,9 @@ export function AppointmentProvider({ children }: { children: ReactNode }) {
         let query = supabase
           .from("termine")
           .select(
-            "id, created_at, grund, startzeitpkt, endzeitpkt, status, customer:customer_id (vorname, name)",
+            "id, created_at, reasen, startpoint, endpoint, status, customer:customer_id (firstname, name)",
           )
-          .order("startzeitpkt", {
+          .order("startpoint", {
             ascending: showAll && !selectedDate ? false : true,
           });
 
@@ -82,8 +82,8 @@ export function AppointmentProvider({ children }: { children: ReactNode }) {
             0,
           );
           query = query
-            .gte("startzeitpkt", startOfDay.toISOString())
-            .lt("startzeitpkt", endOfDay.toISOString());
+            .gte("startpoint", startOfDay.toISOString())
+            .lt("startpoint", endOfDay.toISOString());
         } else if (showAll) {
           // No filter, show all appointments
         } else {
@@ -107,8 +107,8 @@ export function AppointmentProvider({ children }: { children: ReactNode }) {
             0,
           );
           query = query
-            .gte("startzeitpkt", startOfDay.toISOString())
-            .lt("startzeitpkt", endOfDay.toISOString());
+            .gte("startpoint", startOfDay.toISOString())
+            .lt("startpoint", endOfDay.toISOString());
         }
 
         const { data, error } = await query;
@@ -120,11 +120,11 @@ export function AppointmentProvider({ children }: { children: ReactNode }) {
         }
 
         const mapped = (data as AppointmentRow[]).map((row) => {
-          const start = splitDateTime(row.startzeitpkt);
-          const end = splitDateTime(row.endzeitpkt);
+          const start = splitDateTime(row.startpoint);
+          const end = splitDateTime(row.endpoint);
           return {
             id: row.id,
-            title: row.grund ?? "",
+            title: row.reasen ?? "",
             startDate: start.date,
             endDate: end.date,
             startTime: start.time,
@@ -145,7 +145,7 @@ export function AppointmentProvider({ children }: { children: ReactNode }) {
   const saveAppointment = useCallback(
     async (
       payload: {
-        grund: string;
+        reason: string;
         startpoint: string;
         endpoint: string;
         status: string;
@@ -154,9 +154,9 @@ export function AppointmentProvider({ children }: { children: ReactNode }) {
       editingId?: number | null,
     ) => {
       const dbPayload = {
-        grund: payload.grund,
-        startzeitpkt: payload.startpoint,
-        endzeitpkt: payload.endpoint,
+        reasen: payload.reason,
+        startpoint: payload.startpoint,
+        endpoint: payload.endpoint,
         status: payload.status,
         customer_id: payload.customer_id,
       };
