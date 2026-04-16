@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { useAppointments } from "@/context/AppointmentContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,7 @@ export function NewDate() {
   });
   const navigate = useNavigate();
   const location = useLocation();
+  const { saveAppointment: saveAppointmentToContext, loadAppointments } = useAppointments();
   const editingAppointment = (
     location.state as { appointment?: Appointment } | null
   )?.appointment;
@@ -165,36 +167,23 @@ export function NewDate() {
   const saveAppointment = async () => {
     const payload = {
       grund: title.trim(),
-      startzeitpkt: toTimestampString(startDate, startTime),
-      endzeitpkt: toTimestampString(endDate, endTime),
+      startpoint: toTimestampString(startDate, startTime),
+      endpoint: toTimestampString(endDate, endTime),
       status,
       customer_id: selectedCustomerId ?? selectedCustomer?.id ?? null,
     };
 
-    if (editingAppointmentId) {
-      const { error } = await supabase
-        .from("termine")
-        .update(payload)
-        .eq("id", editingAppointmentId);
-      if (error) {
-        toast.error(`Speichern fehlgeschlagen: ${error.message}`);
-        return null;
-      }
-      return editingAppointmentId;
-    }
+    const appointmentId = await saveAppointmentToContext(
+      payload,
+      editingAppointmentId,
+    );
 
-    const { data, error } = await supabase
-      .from("termine")
-      .insert(payload)
-      .select("id")
-      .single();
-
-    if (error || !data) {
-      toast.error(`Speichern fehlgeschlagen: ${error?.message ?? "Unbekannt"}`);
+    if (!appointmentId) {
+      toast.error(`Speichern fehlgeschlagen`);
       return null;
     }
 
-    return data.id as number;
+    return appointmentId;
   };
 
   const toDateTime = (date: string, time: string) => {
@@ -567,6 +556,7 @@ export function NewDate() {
                           return;
                         }
                         resetForm();
+                        await loadAppointments(false);
                         toast(
                           "Der Termin ist im Kalender gespeichert. Sie werden zum Kunden anlegen weitergeleitet.",
                         );
@@ -609,6 +599,7 @@ export function NewDate() {
                           return;
                         }
                         resetForm();
+                        await loadAppointments(false);
                         toast("Der Termin ist im Kalender gespeichert.");
                       })();
                     }}
