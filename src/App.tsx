@@ -572,7 +572,9 @@ function AppLayout() {
       return;
     }
 
-    setSelectedDate(selectedDateParam ? new Date(selectedDateParam) : undefined);
+    setSelectedDate(
+      selectedDateParam ? new Date(selectedDateParam) : undefined,
+    );
   }, [selectedDateParam, showAllAppointments]);
 
   const handleToggleAllAppointments = () => {
