@@ -257,7 +257,9 @@ export function NewCustomer() {
                 <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>
               ) : null}
               <div className="mt-6 flex flex-col gap-2 text-muted-foreground sm:flex-row sm:items-center sm:gap-4 sm:text-xl">
-                <span className="text-sm sm:w-40 sm:text-xl">Geburtsdatum:</span>
+                <span className="text-sm sm:w-40 sm:text-xl">
+                  Geburtsdatum:
+                </span>
                 <input
                   type="date"
                   value={birthDate}
