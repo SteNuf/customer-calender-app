@@ -15,24 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-type Appointment = {
-  id: number;
-  title: string;
-  startDate: string;
-  endDate: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  createdAt: string;
-};
-
-type CustomerOption = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  phone: string;
-};
+import { type Appointment, type CustomerOption } from "@/types/appointments";
 
 const toTimestampString = (date: string, time: string) => {
   if (!date || !time) {
