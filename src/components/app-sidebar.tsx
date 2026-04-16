@@ -96,7 +96,7 @@ export function AppSidebar({
               </SidebarMenuItem>
             </SidebarMenu>
           ) : (
-            <div className="mt-6 h-[7rem]" aria-hidden="true" />
+            <div className="mt-6 h-28" aria-hidden="true" />
           )}
         </div>
 
